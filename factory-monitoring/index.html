@@ -1,0 +1,1698 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="../assets/gti-logo.png"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>GTI Factory Monitoring</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Kanit:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --green: #1e8e3e;
+        --green-dark: #146c2e;
+        --green-light: #a8d58a;
+        --navy: #1f3550;
+        --blue-text: #1c3f78;
+        --text: #2b2b2b;
+        --muted: #6b7280;
+        --bg: #eef0f2;
+        --panel: #ffffff;
+        --card: #f1f2f3;
+        --border: #e3e5e8;
+        --flow: #e8a33a;
+        --flow-2: #d9472b;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --text: #e7e9ec;
+          --muted: #9aa3ad;
+          --bg: #11161b;
+          --panel: #1a2128;
+          --card: #232b33;
+          --border: #2d3640;
+          --blue-text: #8fb6ff;
+          --navy: #2c4a6e;
+          --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+      }
+      :root[data-theme="dark"] {
+        --text: #e7e9ec;
+        --muted: #9aa3ad;
+        --bg: #11161b;
+        --panel: #1a2128;
+        --card: #232b33;
+        --border: #2d3640;
+        --blue-text: #8fb6ff;
+        --navy: #2c4a6e;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Poppins", "Kanit", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* ---------- decorative stripes ---------- */
+      .stripe {
+        position: fixed;
+        height: 14px;
+        transform: skewX(-40deg);
+        z-index: 0;
+        pointer-events: none;
+      }
+      .stripe.t1 {
+        top: 6px;
+        right: 120px;
+        width: 160px;
+        background: var(--green);
+      }
+      .stripe.t2 {
+        top: 6px;
+        right: -20px;
+        width: 150px;
+        background: var(--green-light);
+      }
+      .stripe.t3 {
+        top: 20px;
+        right: -10px;
+        width: 90px;
+        height: 40px;
+        background: var(--green);
+      }
+      .stripe.b1 {
+        bottom: 0;
+        left: -20px;
+        width: 110px;
+        height: 22px;
+        background: var(--green);
+      }
+      .stripe.b2 {
+        bottom: 0;
+        left: 70px;
+        width: 140px;
+        height: 10px;
+        background: var(--green-light);
+      }
+      .stripe.b3 {
+        bottom: 0;
+        left: 200px;
+        width: 160px;
+        height: 10px;
+        background: var(--green-dark);
+      }
+
+      /* ---------- header ---------- */
+      header {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 180px 1fr auto;
+        align-items: center;
+        padding: 10px 24px 6px 24px;
+        gap: 16px;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo img {
+        height: 58px;
+        width: auto;
+        background: #fff;
+        border-radius: 6px;
+        padding: 3px 6px;
+        display: block;
+      }
+      header h1 {
+        font-size: clamp(16px, 2vw, 26px);
+        font-weight: 700;
+        color: var(--navy);
+      }
+      :root[data-theme="dark"] header h1 {
+        color: var(--text);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) header h1 {
+          color: var(--text);
+        }
+      }
+      .clock {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        font-size: clamp(16px, 1.8vw, 24px);
+        font-weight: 500;
+        padding-right: 110px;
+      }
+      .clock .item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .clock .ico {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--green);
+        display: grid;
+        place-items: center;
+      }
+      .clock .ico.square {
+        border-radius: 6px;
+      }
+
+      /* ---------- layout ---------- */
+      .layout {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        gap: 10px;
+        padding: 0 10px 24px 10px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
+
+      /* ---------- system diagram ---------- */
+      .diagram {
+        padding: 16px 20px 18px;
+        position: relative;
+      }
+      .diagram-grid {
+        display: grid;
+        grid-template-columns: 1fr 70px 1fr;
+        grid-template-rows: auto auto auto auto auto;
+        align-items: center;
+        row-gap: 6px;
+      }
+      .capacity {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        align-self: start;
+      }
+      .capacity .lbl {
+        font-size: 15px;
+        color: var(--muted);
+      }
+      .capacity .val {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .diagram-title {
+        position: absolute;
+        top: 14px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--navy);
+        pointer-events: none;
+      }
+      :root[data-theme="dark"] .diagram-title {
+        color: var(--text);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .diagram-title {
+          color: var(--text);
+        }
+      }
+
+      .import {
+        grid-column: 2;
+        grid-row: 1;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 44px;
+      }
+      .import .lbl {
+        font-size: 20px;
+      }
+      .big {
+        font-size: clamp(22px, 2.3vw, 32px);
+        font-weight: 700;
+        color: var(--blue-text);
+        white-space: nowrap;
+      }
+      .big small {
+        font-size: 0.7em;
+        margin-left: 8px;
+      }
+
+      .weather {
+        grid-column: 3;
+        grid-row: 1;
+        justify-self: end;
+        align-self: start;
+        background: var(--card);
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 13px;
+      }
+      .weather table {
+        border-collapse: collapse;
+      }
+      .weather td {
+        padding: 3px 6px;
+        white-space: nowrap;
+      }
+      .weather td.v {
+        font-weight: 600;
+        text-align: right;
+      }
+      .weather td.u {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      /* phase rows */
+      .phase-row {
+        display: flex;
+        align-items: center;
+      }
+      .phase-left {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .phase-right {
+        grid-column: 3;
+        grid-row: 2;
+        flex-direction: row-reverse;
+      }
+      .phase-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .phase-btn {
+        font: inherit;
+        font-size: 19px;
+        font-weight: 500;
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        padding: 6px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: filter 0.15s;
+      }
+      .phase-btn:hover {
+        filter: brightness(1.15);
+      }
+      .phase-btn.p1 {
+        background: var(--navy);
+      }
+      .phase-btn.p2 {
+        background: var(--green);
+      }
+
+      /* flow lines */
+      /* เส้นประอยู่กับที่ ลูกศรวิ่งตามทิศการไหลของไฟ */
+      .hline {
+        flex: 1;
+        height: 2px;
+        position: relative;
+        margin-top: 46px;
+        min-width: 30px;
+        background: repeating-linear-gradient(90deg, var(--flow-2) 0 6px, transparent 6px 10px);
+      }
+      .phase-left .hline {
+        margin-right: -36px;
+      }
+      .phase-right .hline {
+        margin-left: -36px;
+      }
+
+      .center-col {
+        grid-column: 2;
+        grid-row: 2 / 6;
+        align-self: stretch;
+        position: relative;
+      }
+      .vline {
+        position: absolute;
+        left: 50%;
+        top: -14px;
+        bottom: 6px;
+        width: 2px;
+        transform: translateX(-50%);
+        background: repeating-linear-gradient(180deg, var(--flow-2) 0 6px, transparent 6px 10px);
+      }
+
+      .arw {
+        position: absolute;
+        width: 16px;
+        height: 12px;
+        opacity: 0;
+        transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+        animation: 2.4s linear infinite;
+      }
+      .arw:nth-child(2) {
+        animation-delay: -0.8s;
+      }
+      .arw:nth-child(3) {
+        animation-delay: -1.6s;
+      }
+      .phase-left .arw {
+        top: 50%;
+        animation-name: moveRight;
+      }
+      .phase-right .arw {
+        top: 50%;
+        --rot: 180deg;
+        animation-name: moveLeft;
+      }
+      .vline .arw {
+        left: 50%;
+        --rot: 90deg;
+        animation-name: moveDown;
+        animation-duration: 3.2s;
+      }
+      .vline .arw:nth-child(2) {
+        animation-delay: -1.07s;
+      }
+      .vline .arw:nth-child(3) {
+        animation-delay: -2.13s;
+      }
+      @keyframes moveRight {
+        0% {
+          left: 0;
+          opacity: 0;
+        }
+        10%,
+        90% {
+          opacity: 1;
+        }
+        100% {
+          left: 100%;
+          opacity: 0;
+        }
+      }
+      @keyframes moveLeft {
+        0% {
+          left: 100%;
+          opacity: 0;
+        }
+        10%,
+        90% {
+          opacity: 1;
+        }
+        100% {
+          left: 0;
+          opacity: 0;
+        }
+      }
+      @keyframes moveDown {
+        0% {
+          top: 0;
+          opacity: 0;
+        }
+        8%,
+        92% {
+          opacity: 1;
+        }
+        100% {
+          top: 100%;
+          opacity: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .arw {
+          animation: none;
+          opacity: 1;
+          left: 50%;
+          top: 50%;
+        }
+      }
+
+      .phase-kw-left {
+        grid-column: 1;
+        grid-row: 3;
+        padding-left: 70px;
+      }
+      .phase-kw-right {
+        grid-column: 3;
+        grid-row: 3;
+        padding-left: 80px;
+      }
+
+      .yield-card {
+        background: var(--card);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: grid;
+        gap: 14px;
+        margin-top: 6px;
+      }
+      .yield-left {
+        grid-column: 1;
+        grid-row: 4;
+      }
+      .yield-right {
+        grid-column: 3;
+        grid-row: 4;
+      }
+      .yrow {
+        display: grid;
+        grid-template-columns: 26px 1fr auto 40px;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+      .yrow .n {
+        font-size: clamp(16px, 1.6vw, 22px);
+        font-weight: 700;
+        color: var(--blue-text);
+        text-align: right;
+      }
+      .yrow .u {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .load {
+        grid-column: 1 / 4;
+        grid-row: 6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: -4px;
+      }
+      .load .pic {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+        margin-left: 70px;
+      }
+      .load .pic span {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      /* ---------- right column ---------- */
+      .right {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+      }
+      .env {
+        padding: 10px 16px 14px;
+      }
+      .env h2,
+      .chart-panel h2 {
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .env-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        text-align: center;
+        margin-top: 4px;
+      }
+      .env-grid .num {
+        font-size: clamp(15px, 1.4vw, 19px);
+        font-weight: 600;
+        margin-top: 4px;
+      }
+      .env-grid .cap {
+        font-size: 12px;
+        color: var(--green);
+        line-height: 1.35;
+        margin-top: 4px;
+      }
+      .env-grid svg {
+        width: 72px;
+        height: 66px;
+      }
+
+      .kpis {
+        padding: 10px 16px;
+        display: grid;
+        gap: 8px;
+      }
+      .kpi {
+        display: grid;
+        grid-template-columns: 30px 1fr auto 46px;
+        align-items: center;
+        gap: 10px;
+      }
+      .kpi .l {
+        font-size: 15px;
+      }
+      .kpi .n {
+        font-size: clamp(18px, 1.7vw, 24px);
+        font-weight: 700;
+        text-align: right;
+        color: var(--text);
+      }
+      .kpi .u {
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .chart-panel {
+        padding: 10px 12px 8px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 260px;
+      }
+      .chart-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .chart-head h2 {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .legend {
+        display: flex;
+        gap: 10px;
+        font-size: 11px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+      .legend i {
+        display: inline-block;
+        width: 18px;
+        height: 2px;
+        vertical-align: middle;
+        margin-right: 4px;
+      }
+      .chart-wrap {
+        position: relative;
+        flex: 1;
+        min-height: 210px;
+      }
+
+      .theme-toggle {
+        position: fixed;
+        right: 14px;
+        bottom: 14px;
+        z-index: 5;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 0;
+        background: var(--green);
+        color: #fff;
+        cursor: pointer;
+        font-size: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      /* ---------- responsive ---------- */
+      @media (max-width: 1150px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .right {
+          grid-column: 1;
+        }
+      }
+      @media (max-width: 760px) {
+        header {
+          grid-template-columns: 1fr;
+          text-align: center;
+          justify-items: center;
+          padding: 10px 16px;
+        }
+        .clock {
+          padding-right: 0;
+        }
+        .stripe.t1,
+        .stripe.t2,
+        .stripe.t3 {
+          display: none;
+        }
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+          padding: 0 16px 24px;
+        }
+        .right {
+          grid-column: 1;
+        }
+        .diagram {
+          padding: 12px 10px;
+        }
+        .diagram-grid {
+          grid-template-columns: 1fr 26px 1fr;
+        }
+        .diagram-title {
+          position: static;
+          margin-bottom: 8px;
+        }
+        .capacity {
+          grid-column: 1 / 4;
+          grid-row: 1;
+        }
+        .import {
+          grid-column: 1 / 4;
+          grid-row: 2;
+          padding-top: 4px;
+        }
+        .weather {
+          grid-column: 1 / 4;
+          grid-row: 3;
+          justify-self: center;
+          margin-bottom: 6px;
+        }
+        .phase-left,
+        .phase-right {
+          grid-row: 4;
+        }
+        .phase-kw-left,
+        .phase-kw-right {
+          grid-row: 5;
+          padding-left: 0;
+          text-align: center;
+        }
+        .yield-left,
+        .yield-right {
+          grid-row: 6;
+        }
+        .center-col {
+          grid-row: 4 / 7;
+        }
+        .load {
+          grid-row: 7;
+        }
+        .load .pic {
+          margin-left: 0;
+        }
+        .phase-btn {
+          font-size: 13px;
+          padding: 5px 8px;
+        }
+        .phase-block svg {
+          width: 36px;
+          height: 36px;
+        }
+        .hline {
+          min-width: 6px;
+          margin-top: 40px;
+        }
+        .phase-left .hline {
+          margin-right: -13px;
+        }
+        .phase-right .hline {
+          margin-left: -13px;
+        }
+        .yield-card {
+          padding: 10px;
+          gap: 10px;
+        }
+        .yrow {
+          grid-template-columns: 1fr;
+          gap: 0;
+          text-align: center;
+        }
+        .yrow svg {
+          display: none;
+        }
+        .yrow .n {
+          text-align: center;
+        }
+        .big {
+          font-size: 20px;
+        }
+        .kpi .l {
+          font-size: 13px;
+        }
+        .env-grid svg {
+          width: 54px;
+          height: 50px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="../assets/fit-screen.js"></script>
+    <div class="stripe t1"></div>
+    <div class="stripe t2"></div>
+    <div class="stripe t3"></div>
+    <div class="stripe b1"></div>
+    <div class="stripe b2"></div>
+    <div class="stripe b3"></div>
+
+    <!-- SVG symbols -->
+    <svg
+      width="0"
+      height="0"
+      style="position: absolute"
+    >
+      <defs>
+        <symbol
+          id="i-solar"
+          viewBox="0 0 48 48"
+        >
+          <g
+            fill="none"
+            stroke="#2e9e4f"
+            stroke-width="1.6"
+            stroke-linejoin="round"
+          >
+            <path d="M6 30 L12 14 H34 L30 30 Z" />
+            <path d="M9 22 H32 M18 14 L15 30 M26 14 L23 30" />
+            <path d="M18 30 V38 M14 38 H24" />
+            <path
+              d="M36 4 L32 13 H38 L33 24"
+              stroke-width="1.8"
+            />
+          </g>
+        </symbol>
+        <symbol
+          id="i-chev"
+          viewBox="0 0 16 12"
+        >
+          <g
+            fill="none"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M2 2 L6 6 L2 10"
+              stroke="#e8a33a"
+            />
+            <path
+              d="M9 2 L13 6 L9 10"
+              stroke="#d9472b"
+            />
+          </g>
+        </symbol>
+        <symbol
+          id="i-meter"
+          viewBox="0 0 28 28"
+        >
+          <rect
+            x="3"
+            y="4"
+            width="20"
+            height="18"
+            rx="3"
+            fill="#2e9e4f"
+          />
+          <rect
+            x="6"
+            y="7"
+            width="14"
+            height="5"
+            rx="1"
+            fill="#fff"
+          />
+          <g fill="#fff">
+            <circle
+              cx="8"
+              cy="15.5"
+              r="1.2"
+            />
+            <circle
+              cx="12"
+              cy="15.5"
+              r="1.2"
+            />
+            <circle
+              cx="16"
+              cy="15.5"
+              r="1.2"
+            />
+            <circle
+              cx="8"
+              cy="19"
+              r="1.2"
+            />
+            <circle
+              cx="12"
+              cy="19"
+              r="1.2"
+            />
+          </g>
+          <circle
+            cx="21"
+            cy="21"
+            r="5"
+            fill="#146c2e"
+            stroke="#fff"
+            stroke-width="1.2"
+          />
+          <path
+            d="M21.5 18 L19.5 21.5 H22 L20.5 24"
+            stroke="#fff"
+            stroke-width="1.1"
+            fill="none"
+          />
+        </symbol>
+        <symbol
+          id="i-baht"
+          viewBox="0 0 28 28"
+        >
+          <circle
+            cx="14"
+            cy="14"
+            r="11"
+            fill="#2e9e4f"
+          />
+          <text
+            x="14"
+            y="19"
+            text-anchor="middle"
+            font-size="14"
+            font-weight="700"
+            fill="#fff"
+            font-family="Arial"
+          >
+            ฿
+          </text>
+        </symbol>
+        <symbol
+          id="i-bag"
+          viewBox="0 0 28 28"
+        >
+          <path
+            d="M10 4 H18 L16 8 H12 Z"
+            fill="#2e9e4f"
+          />
+          <path
+            d="M12 8 C4 12 4 25 14 25 C24 25 24 12 16 8 Z"
+            fill="#2e9e4f"
+          />
+          <text
+            x="14"
+            y="21"
+            text-anchor="middle"
+            font-size="10"
+            font-weight="700"
+            fill="#fff"
+            font-family="Arial"
+          >
+            ฿
+          </text>
+        </symbol>
+      </defs>
+    </svg>
+
+    <header>
+      <div class="logo">
+        <img
+          src="../assets/gti-logo.png"
+          alt="GTI logo"
+        />
+      </div>
+      <h1>Globaltronic Factory Monitoring</h1>
+      <div class="clock">
+        <div class="item">
+          <div class="ico square">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2"
+            >
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="16"
+                rx="2"
+              />
+              <path d="M3 10h18M8 3v4M16 3v4" />
+              <path
+                d="M7 14h2M11 14h2M15 14h2M7 17h2M11 17h2"
+                stroke-width="1.6"
+              />
+            </svg>
+          </div>
+          <span id="date">--/--/----</span>
+        </div>
+        <div class="item">
+          <div class="ico">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#fff"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            >
+              <path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <span id="time">--:--:--</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- System Diagram -->
+      <section class="panel diagram">
+        <div class="diagram-title">System Diagram</div>
+        <div class="diagram-grid">
+          <div class="capacity">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 40 40"
+            >
+              <circle
+                cx="13"
+                cy="16"
+                r="6"
+                fill="#2e9e4f"
+              />
+              <path
+                d="M3 36 C3 26 23 26 23 36 Z"
+                fill="#2e9e4f"
+              />
+              <rect
+                x="20"
+                y="3"
+                width="16"
+                height="12"
+                rx="3"
+                fill="#2e9e4f"
+              />
+              <path
+                d="M24 17 L24 15 L27 15 Z"
+                fill="#2e9e4f"
+              />
+              <path
+                d="M24 9 L27 12 L32 6"
+                stroke="#fff"
+                stroke-width="2"
+                fill="none"
+              />
+            </svg>
+            <div>
+              <div class="lbl">Capacity</div>
+              <div class="val"><span id="capacity">xxx.xx</span> kWp</div>
+            </div>
+          </div>
+
+          <div class="import">
+            <div class="lbl">Import</div>
+            <div class="big"><span id="import">10.55</span><small>kW</small></div>
+            <svg
+              width="90"
+              height="95"
+              viewBox="0 0 90 95"
+              fill="none"
+              stroke="#5b6570"
+              stroke-width="2"
+              stroke-linejoin="round"
+            >
+              <path d="M45 4 L30 92 M45 4 L60 92" />
+              <path d="M14 22 H76 M20 36 H70 M24 48 H66" />
+              <path
+                d="M38 22 L52 36 L38 48 L55 66 L33 80 L58 92 M52 22 L38 36 L52 48 L35 66 L57 80 L32 92"
+              />
+              <path
+                d="M14 22 V28 M76 22 V28 M20 36 V42 M70 36 V42"
+                stroke="#8a95a0"
+              />
+            </svg>
+          </div>
+
+          <div class="weather">
+            <table>
+              <tr>
+                <td>☀️ IRR</td>
+                <td
+                  class="v"
+                  id="irr"
+                >
+                  1020
+                </td>
+                <td class="u">W/m2</td>
+              </tr>
+              <tr>
+                <td>🌡️ Temp.</td>
+                <td
+                  class="v"
+                  id="temp"
+                >
+                  35.8
+                </td>
+                <td class="u">°C</td>
+              </tr>
+              <tr>
+                <td>🔆 PV Temp</td>
+                <td
+                  class="v"
+                  id="pvtemp"
+                >
+                  41.8
+                </td>
+                <td class="u">°C</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Phase 1 -->
+          <div class="phase-row phase-left">
+            <div class="phase-block">
+              <svg
+                width="46"
+                height="46"
+              >
+                <use href="#i-solar" />
+              </svg>
+              <button class="phase-btn p1">Phase 1 &gt;&gt;</button>
+            </div>
+            <div class="hline">
+              <svg class="arw"><use href="#i-chev" /></svg
+              ><svg class="arw"><use href="#i-chev" /></svg
+              ><svg class="arw"><use href="#i-chev" /></svg>
+            </div>
+          </div>
+
+          <div class="center-col">
+            <div class="vline">
+              <svg class="arw"><use href="#i-chev" /></svg
+              ><svg class="arw"><use href="#i-chev" /></svg
+              ><svg class="arw"><use href="#i-chev" /></svg>
+            </div>
+          </div>
+
+          <!-- Phase 2 -->
+          <div class="phase-row phase-right">
+            <div class="phase-block">
+              <svg
+                width="46"
+                height="46"
+              >
+                <use href="#i-solar" />
+              </svg>
+              <button class="phase-btn p2">Phase 2 &gt;&gt;</button>
+            </div>
+            <div class="hline">
+              <svg class="arw"><use href="#i-chev" /></svg
+              ><svg class="arw"><use href="#i-chev" /></svg
+              ><svg class="arw"><use href="#i-chev" /></svg>
+            </div>
+          </div>
+
+          <div class="phase-kw-left big"><span id="p1kw">700.55</span><small>kW</small></div>
+          <div class="phase-kw-right big"><span id="p2kw">200.55</span><small>kW</small></div>
+
+          <div class="yield-card yield-left">
+            <div class="yrow">
+              <svg
+                width="24"
+                height="24"
+              >
+                <use href="#i-meter" /></svg
+              ><span>Yield Today</span
+              ><span
+                class="n"
+                id="p1today"
+                >950.33</span
+              ><span class="u">kWh</span>
+            </div>
+            <div class="yrow">
+              <svg
+                width="24"
+                height="24"
+              >
+                <use href="#i-meter" /></svg
+              ><span>Total Yield</span
+              ><span
+                class="n"
+                id="p1total"
+                >194,750.45</span
+              ><span class="u">kWh</span>
+            </div>
+          </div>
+          <div class="yield-card yield-right">
+            <div class="yrow">
+              <svg
+                width="24"
+                height="24"
+              >
+                <use href="#i-meter" /></svg
+              ><span>Yield Today</span
+              ><span
+                class="n"
+                id="p2today"
+                >950.33</span
+              ><span class="u">kWh</span>
+            </div>
+            <div class="yrow">
+              <svg
+                width="24"
+                height="24"
+              >
+                <use href="#i-meter" /></svg
+              ><span>Total Yield</span
+              ><span
+                class="n"
+                id="p2total"
+                >194,750.45</span
+              ><span class="u">kWh</span>
+            </div>
+          </div>
+
+          <div class="load">
+            <div class="pic">
+              <svg
+                width="120"
+                height="90"
+                viewBox="0 0 120 90"
+              >
+                <polygon
+                  points="10,60 60,85 110,60 60,38"
+                  fill="#2b2f33"
+                />
+                <polygon
+                  points="22,52 60,70 60,48 22,32"
+                  fill="#e9ecef"
+                />
+                <polygon
+                  points="60,70 98,52 98,32 60,48"
+                  fill="#cfd4d9"
+                />
+                <polygon
+                  points="22,32 60,48 98,32 60,16"
+                  fill="#f6f7f8"
+                />
+                <rect
+                  x="72"
+                  y="6"
+                  width="7"
+                  height="26"
+                  fill="#d9dde1"
+                />
+                <rect
+                  x="72"
+                  y="8"
+                  width="7"
+                  height="3"
+                  fill="#e8a33a"
+                />
+                <rect
+                  x="84"
+                  y="10"
+                  width="7"
+                  height="22"
+                  fill="#d9dde1"
+                />
+                <rect
+                  x="84"
+                  y="12"
+                  width="7"
+                  height="3"
+                  fill="#e8a33a"
+                />
+                <g fill="#2c3e66">
+                  <polygon points="36,30 44,33 52,30 44,27" />
+                  <polygon points="46,25 54,28 62,25 54,22" />
+                </g>
+                <g fill="#9aa3ad">
+                  <rect
+                    x="30"
+                    y="44"
+                    width="6"
+                    height="8"
+                  />
+                  <rect
+                    x="40"
+                    y="48"
+                    width="6"
+                    height="8"
+                  />
+                  <rect
+                    x="66"
+                    y="54"
+                    width="10"
+                    height="12"
+                    fill="#6b7480"
+                  />
+                </g>
+              </svg>
+              <span>Load</span>
+            </div>
+            <div class="big"><span id="load">911.65</span><small>kW</small></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <div class="right">
+        <section class="panel env">
+          <h2>Environmental Benefits</h2>
+          <div class="env-grid">
+            <div>
+              <svg viewBox="0 0 80 70">
+                <ellipse
+                  cx="40"
+                  cy="60"
+                  rx="34"
+                  ry="8"
+                  fill="#e6f2e6"
+                />
+                <rect
+                  x="14"
+                  y="26"
+                  width="14"
+                  height="32"
+                  rx="2"
+                  fill="#d8ead8"
+                />
+                <rect
+                  x="32"
+                  y="14"
+                  width="10"
+                  height="44"
+                  rx="2"
+                  fill="#c3e0c3"
+                />
+                <rect
+                  x="46"
+                  y="20"
+                  width="10"
+                  height="38"
+                  rx="2"
+                  fill="#c3e0c3"
+                />
+                <rect
+                  x="58"
+                  y="34"
+                  width="10"
+                  height="24"
+                  rx="2"
+                  fill="#d8ead8"
+                />
+                <circle
+                  cx="40"
+                  cy="8"
+                  r="5"
+                  fill="#e8f3e8"
+                />
+                <circle
+                  cx="52"
+                  cy="12"
+                  r="4"
+                  fill="#e8f3e8"
+                />
+                <rect
+                  x="32"
+                  y="22"
+                  width="10"
+                  height="3"
+                  fill="#7dc383"
+                />
+                <rect
+                  x="46"
+                  y="28"
+                  width="10"
+                  height="3"
+                  fill="#7dc383"
+                />
+              </svg>
+              <div
+                class="num"
+                id="co2"
+              >
+                13,969 k
+              </div>
+              <div class="cap">Pounds of CO₂<br />Emission Saved</div>
+            </div>
+            <div>
+              <svg viewBox="0 0 80 70">
+                <ellipse
+                  cx="40"
+                  cy="62"
+                  rx="32"
+                  ry="6"
+                  fill="#e6f2e6"
+                />
+                <ellipse
+                  cx="24"
+                  cy="34"
+                  rx="11"
+                  ry="20"
+                  fill="#3aa04a"
+                />
+                <ellipse
+                  cx="56"
+                  cy="34"
+                  rx="11"
+                  ry="20"
+                  fill="#3aa04a"
+                />
+                <ellipse
+                  cx="40"
+                  cy="26"
+                  rx="13"
+                  ry="22"
+                  fill="#2e8b3e"
+                />
+                <rect
+                  x="23"
+                  y="50"
+                  width="2"
+                  height="12"
+                  fill="#2e6b33"
+                />
+                <rect
+                  x="55"
+                  y="50"
+                  width="2"
+                  height="12"
+                  fill="#2e6b33"
+                />
+                <rect
+                  x="39"
+                  y="44"
+                  width="2"
+                  height="18"
+                  fill="#2e6b33"
+                />
+              </svg>
+              <div
+                class="num"
+                id="trees"
+              >
+                189,122
+              </div>
+              <div class="cap">Equivalent Tree<br />Planting</div>
+            </div>
+            <div>
+              <svg viewBox="0 0 80 70">
+                <polygon
+                  points="6,50 40,66 76,48 42,32"
+                  fill="#e3ece3"
+                />
+                <path
+                  d="M18 44 C20 36 28 34 36 34 L50 34 C56 34 60 38 62 42 L66 44 L66 50 L18 52 Z"
+                  fill="#cfe3cf"
+                />
+                <path
+                  d="M28 36 L34 30 L48 30 L54 36 Z"
+                  fill="#a9cfa9"
+                />
+                <circle
+                  cx="28"
+                  cy="52"
+                  r="4"
+                  fill="#7a8a7a"
+                />
+                <circle
+                  cx="56"
+                  cy="50"
+                  r="4"
+                  fill="#7a8a7a"
+                />
+                <circle
+                  cx="62"
+                  cy="18"
+                  r="9"
+                  fill="#5fb36a"
+                />
+                <rect
+                  x="61"
+                  y="26"
+                  width="2"
+                  height="12"
+                  fill="#3f7a46"
+                />
+              </svg>
+              <div
+                class="num"
+                id="miles"
+              >
+                28,434 k
+              </div>
+              <div class="cap">Miles Driven on<br />Sunshine</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel kpis">
+          <div class="kpi">
+            <svg
+              width="28"
+              height="28"
+            >
+              <use href="#i-meter" /></svg
+            ><span class="l">Yield Today</span
+            ><span
+              class="n"
+              id="yieldToday"
+              >1,900.67</span
+            ><span class="u">kWh</span>
+          </div>
+          <div class="kpi">
+            <svg
+              width="28"
+              height="28"
+            >
+              <use href="#i-meter" /></svg
+            ><span class="l">Total Yield</span
+            ><span
+              class="n"
+              id="yieldTotal"
+              >389,500.93</span
+            ><span class="u">kWh</span>
+          </div>
+          <div class="kpi">
+            <svg
+              width="28"
+              height="28"
+            >
+              <use href="#i-baht" /></svg
+            ><span class="l">Today Revenue</span
+            ><span
+              class="n"
+              id="revToday"
+              >1,484.95</span
+            ><span class="u">Baht</span>
+          </div>
+          <div class="kpi">
+            <svg
+              width="28"
+              height="28"
+            >
+              <use href="#i-bag" /></svg
+            ><span class="l">Total Revenue</span
+            ><span
+              class="n"
+              id="revTotal"
+              >1,000,484.95</span
+            ><span class="u">Baht</span>
+          </div>
+        </section>
+
+        <section class="panel chart-panel">
+          <div class="chart-head">
+            <h2>Power (kW)</h2>
+            <div class="legend">
+              <span><i style="background: #e8892b"></i>Load</span>
+              <span><i style="background: #c62828"></i>Grid</span>
+              <span><i style="background: #66bb6a"></i>Phase 1</span>
+              <span><i style="background: #1a237e"></i>Phase 2</span>
+            </div>
+          </div>
+          <div class="chart-wrap"><canvas id="powerChart"></canvas></div>
+        </section>
+      </div>
+    </div>
+
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      title="สลับธีม"
+    >
+      ◐
+    </button>
+
+    <script>
+      /* ---------- Clock ---------- */
+      const pad = (n) => String(n).padStart(2, "0");
+      function tick() {
+        const d = new Date();
+        document.getElementById("date").textContent =
+          `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+        document.getElementById("time").textContent =
+          `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      /* ---------- Theme toggle ---------- */
+      document.getElementById("themeToggle").addEventListener("click", () => {
+        const root = document.documentElement;
+        const dark = root.dataset.theme
+          ? root.dataset.theme === "dark"
+          : matchMedia("(prefers-color-scheme: dark)").matches;
+        root.dataset.theme = dark ? "light" : "dark";
+        buildChart();
+      });
+
+      /* ---------- Chart (mock data, 06:00–10:30 every 5 min) ---------- */
+      const labels = [],
+        load = [],
+        grid = [],
+        p1 = [],
+        p2 = [];
+      let t = 6 * 60;
+      for (let i = 0; i < 55; i++, t += 5) {
+        labels.push([`${pad(Math.floor(t / 60))}:${pad(t % 60)}`, "09/10"]);
+        const ramp = t < 470 ? 0 : Math.min(1, (t - 470) / 30);
+        const late = t > 540 ? (t - 540) / 90 : 0;
+        load.push(Math.round(100 + ramp * 330 + late * 120 + (Math.random() * 30 - 15)));
+        grid.push(Math.round(80 - ramp * 60 + ramp * 280 - late * 120 + (Math.random() * 30 - 15)));
+        p1.push(Math.round(40 + ramp * 110 + late * 90 + (Math.random() * 14 - 7)));
+        p2.push(t < 540 ? 20 : 120);
+      }
+
+      let chart;
+      function buildChart() {
+        const css = getComputedStyle(document.documentElement);
+        const text = css.getPropertyValue("--muted").trim();
+        const gridColor = css.getPropertyValue("--border").trim();
+        if (chart) chart.destroy();
+        const ds = (data, color) => ({
+          data,
+          borderColor: color,
+          borderWidth: 1.6,
+          pointRadius: 0,
+          tension: 0.25,
+        });
+        chart = new Chart(document.getElementById("powerChart"), {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              { label: "Load", ...ds(load, "#e8892b") },
+              { label: "Grid", ...ds(grid, "#c62828") },
+              { label: "Phase 1", ...ds(p1, "#66bb6a") },
+              { label: "Phase 2", ...ds(p2, "#1a237e") },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                ticks: {
+                  color: text,
+                  font: { size: 9 },
+                  maxRotation: 0,
+                  autoSkip: true,
+                  maxTicksLimit: 10,
+                },
+                grid: { display: false },
+              },
+              y: {
+                min: -200,
+                max: 1000,
+                ticks: { color: text, font: { size: 9 }, stepSize: 240 },
+                grid: { color: gridColor },
+              },
+            },
+          },
+        });
+      }
+      buildChart();
+
+      /* ---------- Simulated live values (แทนที่ด้วย API จริงได้) ---------- */
+      const fmt = (n, d = 2) =>
+        n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+      const state = {
+        p1: 700.55,
+        p2: 200.55,
+        imp: 10.55,
+        p1today: 950.33,
+        p2today: 950.33,
+        p1total: 194750.45,
+        p2total: 194750.45,
+        revTotal: 1000484.95,
+      };
+      const RATE = 0.78; // Baht / kWh (ตัวอย่าง)
+
+      function update() {
+        state.p1 = Math.max(0, state.p1 + (Math.random() * 20 - 10));
+        state.p2 = Math.max(0, state.p2 + (Math.random() * 10 - 5));
+        state.imp = Math.max(0, state.imp + (Math.random() * 2 - 1));
+        const e1 = (state.p1 * 5) / 3600,
+          e2 = (state.p2 * 5) / 3600; // kWh in 5 s
+        state.p1today += e1;
+        state.p2today += e2;
+        state.p1total += e1;
+        state.p2total += e2;
+        state.revTotal += (e1 + e2) * RATE;
+        const today = state.p1today + state.p2today;
+
+        const set = (id, v) => (document.getElementById(id).textContent = v);
+        set("p1kw", fmt(state.p1));
+        set("p2kw", fmt(state.p2));
+        set("import", fmt(state.imp));
+        set("load", fmt(state.p1 + state.p2 + state.imp));
+        set("p1today", fmt(state.p1today));
+        set("p2today", fmt(state.p2today));
+        set("p1total", fmt(state.p1total));
+        set("p2total", fmt(state.p2total));
+        set("yieldToday", fmt(today));
+        set("yieldTotal", fmt(state.p1total + state.p2total));
+        set("revToday", fmt(today * RATE));
+        set("revTotal", fmt(state.revTotal));
+        set("irr", Math.round(1000 + Math.random() * 40));
+        set("temp", (35 + Math.random() * 1.5).toFixed(1));
+        set("pvtemp", (41 + Math.random() * 1.5).toFixed(1));
+      }
+      update();
+      setInterval(update, 5000);
+    </script>
+  </body>
+</html>

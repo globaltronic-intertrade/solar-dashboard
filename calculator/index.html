@@ -1,0 +1,1656 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="../assets/gti-logo.png"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>SolarSave — คำนวณประหยัดค่าไฟ</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --sky0: #e8f4fd;
+        --sky1: #d0eafb;
+        --sky2: #b8def8;
+        --sun: #f9b700;
+        --sun2: #fdd35c;
+        --sun3: #fff3c4;
+        --orange: #f97316;
+        --green: #16a34a;
+        --green2: #22c55e;
+        --green-pale: #f0fdf4;
+        --white: #ffffff;
+        --ink: #0f172a;
+        --ink2: #334155;
+        --ink3: #64748b;
+        --ink4: #94a3b8;
+        --border: #e2e8f0;
+        --border2: #cbd5e1;
+        --surface: #f8fafc;
+        --radius: 10px;
+        --radius2: 16px;
+        --radius3: 22px;
+        --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+        --shadow2: 0 2px 8px rgba(15, 23, 42, 0.1), 0 8px 32px rgba(15, 23, 42, 0.08);
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--surface);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── SKY HERO ── */
+      .hero {
+        position: relative;
+        min-height: 360px;
+        display: flex;
+        align-items: flex-end;
+        padding: 0 1.5rem 3.5rem;
+        overflow: hidden;
+      }
+
+      .sky {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          175deg,
+          #1e3a5f 0%,
+          #2563a8 25%,
+          #3b82c4 45%,
+          #60a5d8 62%,
+          #93c5e8 75%,
+          #c8e4f5 87%,
+          #e8f4fd 100%
+        );
+      }
+
+      /* sun */
+      .sun {
+        position: absolute;
+        top: 2rem;
+        right: 10%;
+        width: 100px;
+        height: 100px;
+        z-index: 2;
+      }
+
+      .sun-body {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 38% 35%, #fff7b0, #f9b700 45%, #e8920a);
+        box-shadow:
+          0 0 0 12px rgba(249, 183, 0, 0.15),
+          0 0 0 28px rgba(249, 183, 0, 0.08),
+          0 0 60px rgba(249, 183, 0, 0.4),
+          0 0 120px rgba(249, 183, 0, 0.15);
+        animation: sunGlow 5s ease-in-out infinite;
+      }
+
+      @keyframes sunGlow {
+        0%,
+        100% {
+          box-shadow:
+            0 0 0 12px rgba(249, 183, 0, 0.15),
+            0 0 0 28px rgba(249, 183, 0, 0.08),
+            0 0 60px rgba(249, 183, 0, 0.4),
+            0 0 120px rgba(249, 183, 0, 0.15);
+        }
+        50% {
+          box-shadow:
+            0 0 0 16px rgba(249, 183, 0, 0.2),
+            0 0 0 36px rgba(249, 183, 0, 0.1),
+            0 0 80px rgba(249, 183, 0, 0.55),
+            0 0 160px rgba(249, 183, 0, 0.2);
+        }
+      }
+
+      /* clouds */
+      .cloud {
+        position: absolute;
+        background: #fff;
+        border-radius: 100px;
+        opacity: 0.55;
+        animation: drift linear infinite;
+      }
+      .cloud::before,
+      .cloud::after {
+        content: "";
+        position: absolute;
+        background: #fff;
+        border-radius: 50%;
+      }
+
+      .c1 {
+        width: 120px;
+        height: 30px;
+        top: 22%;
+        left: -140px;
+        animation-duration: 28s;
+        animation-delay: 0s;
+      }
+      .c1::before {
+        width: 50px;
+        height: 50px;
+        top: -22px;
+        left: 20px;
+      }
+      .c1::after {
+        width: 38px;
+        height: 38px;
+        top: -16px;
+        left: 55px;
+      }
+
+      .c2 {
+        width: 80px;
+        height: 20px;
+        top: 38%;
+        left: -100px;
+        animation-duration: 22s;
+        animation-delay: 8s;
+        opacity: 0.35;
+      }
+      .c2::before {
+        width: 32px;
+        height: 32px;
+        top: -14px;
+        left: 14px;
+      }
+      .c2::after {
+        width: 26px;
+        height: 26px;
+        top: -10px;
+        left: 38px;
+      }
+
+      .c3 {
+        width: 160px;
+        height: 36px;
+        top: 14%;
+        left: -180px;
+        animation-duration: 34s;
+        animation-delay: 14s;
+        opacity: 0.4;
+      }
+      .c3::before {
+        width: 64px;
+        height: 64px;
+        top: -28px;
+        left: 28px;
+      }
+      .c3::after {
+        width: 50px;
+        height: 50px;
+        top: -20px;
+        left: 76px;
+      }
+
+      @keyframes drift {
+        from {
+          left: -200px;
+        }
+        to {
+          left: 110%;
+        }
+      }
+
+      /* roofline silhouette */
+      .roofline {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 130px;
+        z-index: 3;
+      }
+
+      .roofline svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* hero content */
+      .hero-content {
+        position: relative;
+        z-index: 4;
+        max-width: 680px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 100px;
+        padding: 5px 14px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #fff;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+      }
+
+      .badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #f9b700;
+        animation: blink 2s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      .hero h1 {
+        font-size: clamp(1.9rem, 5.5vw, 3rem);
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.03em;
+        color: #fff;
+        text-shadow: 0 2px 20px rgba(15, 23, 42, 0.3);
+        margin-bottom: 0.5rem;
+      }
+
+      .hero h1 em {
+        font-style: normal;
+        color: var(--sun2);
+      }
+
+      .hero-sub {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.75);
+        line-height: 1.6;
+      }
+
+      /* ── WRAP ── */
+      .wrap {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 0 1.25rem 4rem;
+        margin-top: -2rem;
+        position: relative;
+        z-index: 10;
+      }
+
+      /* ── SAVE CARD ── */
+      .save-card {
+        background: var(--white);
+        border-radius: var(--radius3);
+        box-shadow: var(--shadow2);
+        padding: 1.75rem 2rem;
+        margin-bottom: 1rem;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+      }
+
+      .save-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--sun), var(--green2), #3b82f6);
+      }
+
+      .save-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ink4);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .big-num {
+        font-size: clamp(2.4rem, 8vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        color: var(--green);
+      }
+
+      .big-unit {
+        font-size: 13px;
+        color: var(--ink3);
+        margin-top: 6px;
+      }
+
+      .save-pills {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-end;
+      }
+
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        padding: 6px 14px;
+        font-size: 12px;
+        color: var(--ink3);
+        white-space: nowrap;
+      }
+      .pill strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      /* progress */
+      .pct-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 1.25rem;
+      }
+      .pct-bar {
+        flex: 1;
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .pct-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: linear-gradient(90deg, var(--green2), var(--sun));
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .pct-label {
+        font-size: 11px;
+        color: var(--ink3);
+        white-space: nowrap;
+      }
+
+      /* ── CARD ── */
+      .card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius2);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+      }
+
+      .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .section-title i {
+        width: 16px;
+        height: 16px;
+        background: linear-gradient(135deg, var(--sun), var(--orange));
+        border-radius: 4px;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+
+      /* ── SLIDERS ── */
+      .slider-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 16px;
+        padding: 0.9rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .slider-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .slider-item:first-child {
+        padding-top: 0;
+      }
+
+      .slider-name {
+        font-size: 13px;
+        color: var(--ink2);
+        margin-bottom: 7px;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--green2) var(--pct, 50%),
+          var(--border) var(--pct, 50%)
+        );
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 2.5px solid var(--green);
+        box-shadow: 0 1px 4px rgba(22, 163, 74, 0.3);
+        cursor: pointer;
+        transition:
+          transform 0.12s,
+          box-shadow 0.12s;
+      }
+      input[type="range"]:active::-webkit-slider-thumb {
+        transform: scale(1.2);
+        box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.15);
+      }
+      input[type="range"]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 2.5px solid var(--green);
+        cursor: pointer;
+      }
+
+      .val-box {
+        background: var(--green-pale);
+        border: 1px solid #bbf7d0;
+        border-radius: var(--radius);
+        padding: 5px 11px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--green);
+        text-align: center;
+        min-width: 96px;
+        white-space: nowrap;
+      }
+
+      /* ── METRICS ── */
+      .metrics-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .metrics-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 1rem;
+      }
+
+      .metric {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius2);
+        padding: 1.1rem 1rem;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+      }
+      .metric::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        border-radius: 0 0 var(--radius2) var(--radius2);
+      }
+      .m-kwh::after {
+        background: linear-gradient(90deg, #3b82f6, transparent);
+      }
+      .m-payback::after {
+        background: linear-gradient(90deg, var(--sun), transparent);
+      }
+      .m-cost::after {
+        background: linear-gradient(90deg, var(--orange), transparent);
+      }
+
+      .metric-label {
+        font-size: 11px;
+        color: var(--ink4);
+        font-weight: 500;
+        margin-bottom: 7px;
+      }
+      .metric-val {
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--ink);
+      }
+      .metric-val.blue {
+        color: #2563eb;
+      }
+      .metric-val.amber {
+        color: #d97706;
+      }
+      .metric-val.orange {
+        color: var(--orange);
+      }
+      .metric-unit {
+        font-size: 11px;
+        color: var(--ink4);
+        margin-top: 3px;
+      }
+
+      /* net card */
+      .net-card {
+        background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+        border: 1px solid #bbf7d0;
+        border-radius: var(--radius2);
+        padding: 1.4rem 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+      }
+      .net-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      .net-label {
+        font-size: 11px;
+        color: var(--green);
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .net-val {
+        font-size: 1.6rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--green);
+      }
+      .net-val.neutral {
+        color: var(--ink2);
+      }
+      .net-unit {
+        font-size: 11px;
+        color: var(--ink3);
+        margin-top: 3px;
+      }
+
+      /* ── CHART ── */
+      .chart-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius2);
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow);
+      }
+      .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .legend {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .leg-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--ink3);
+      }
+      .leg-line {
+        width: 18px;
+        height: 2px;
+        border-radius: 1px;
+      }
+      .leg-dashed {
+        background: repeating-linear-gradient(
+          90deg,
+          #f97316 0,
+          #f97316 4px,
+          transparent 4px,
+          transparent 8px
+        );
+      }
+      .be-badge {
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 100px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--orange);
+      }
+      .chart-wrap {
+        position: relative;
+        height: 210px;
+      }
+
+      /* ── ASSUMPTION ── */
+      .assumptions {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius2);
+        padding: 1.25rem 1.5rem;
+      }
+      .a-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px 16px;
+      }
+      .a-item {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--ink2);
+        padding: 5px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .a-item:nth-last-child(-n + 2) {
+        border-bottom: none;
+      }
+      .a-key {
+        font-size: 11px;
+        color: var(--ink3);
+        min-width: 80px;
+        flex-shrink: 0;
+      }
+
+      /* ── FOOTER ── */
+      .footer {
+        text-align: center;
+        padding: 2rem 1rem 3rem;
+        font-size: 11px;
+        color: var(--ink4);
+        letter-spacing: 0.03em;
+      }
+
+      @media (max-width: 500px) {
+        .metrics-3 {
+          grid-template-columns: 1fr 1fr;
+        }
+        .net-grid {
+          grid-template-columns: 1fr;
+        }
+        .save-pills {
+          display: none;
+        }
+        .a-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          min-height: 300px;
+          padding-bottom: 3rem;
+        }
+        .sun {
+          width: 70px;
+          height: 70px;
+          top: 1.5rem;
+          right: 6%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- HERO -->
+    <div class="hero">
+      <div class="sky"></div>
+
+      <!-- clouds -->
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="cloud c3"></div>
+
+      <!-- sun -->
+      <div class="sun"><div class="sun-body"></div></div>
+
+      <!-- roofline (house silhouette) -->
+      <div class="roofline">
+        <svg
+          viewBox="0 0 1200 130"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <!-- sky gradient fill to blend -->
+          <defs>
+            <linearGradient
+              id="skyBlend"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
+              <stop
+                offset="0%"
+                stop-color="#C8E4F5"
+                stop-opacity="0"
+              />
+              <stop
+                offset="100%"
+                stop-color="#E8F4FD"
+                stop-opacity="0"
+              />
+            </linearGradient>
+          </defs>
+
+          <!-- ground -->
+          <rect
+            x="0"
+            y="90"
+            width="1200"
+            height="40"
+            fill="#1A2E1A"
+          />
+
+          <!-- trees left -->
+          <rect
+            x="30"
+            y="60"
+            width="8"
+            height="35"
+            fill="#1A3A1A"
+          />
+          <polygon
+            points="34,20 18,65 50,65"
+            fill="#1E4A1E"
+          />
+          <polygon
+            points="34,8 14,52 54,52"
+            fill="#256325"
+          />
+
+          <rect
+            x="70"
+            y="68"
+            width="6"
+            height="26"
+            fill="#1A3A1A"
+          />
+          <polygon
+            points="73,35 60,72 86,72"
+            fill="#256325"
+          />
+
+          <!-- House 1 (big center) -->
+          <polygon
+            points="520,0 700,0 780,90 440,90"
+            fill="#2D3748"
+          />
+          <!-- roof with solar panels -->
+          <polygon
+            points="525,5 695,5 772,87 453,87"
+            fill="#374151"
+          />
+          <!-- solar panels on roof -->
+          <rect
+            x="540"
+            y="18"
+            width="45"
+            height="28"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.9"
+          />
+          <rect
+            x="540"
+            y="18"
+            width="45"
+            height="28"
+            rx="2"
+            fill="none"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+          <line
+            x1="562"
+            y1="18"
+            x2="562"
+            y2="46"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.4"
+          />
+          <line
+            x1="540"
+            y1="32"
+            x2="585"
+            y2="32"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.4"
+          />
+
+          <rect
+            x="592"
+            y="24"
+            width="45"
+            height="28"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.9"
+          />
+          <rect
+            x="592"
+            y="24"
+            width="45"
+            height="28"
+            rx="2"
+            fill="none"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+          <line
+            x1="614"
+            y1="24"
+            x2="614"
+            y2="52"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.4"
+          />
+          <line
+            x1="592"
+            y1="38"
+            x2="637"
+            y2="38"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.4"
+          />
+
+          <rect
+            x="644"
+            y="30"
+            width="45"
+            height="28"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.9"
+          />
+          <rect
+            x="644"
+            y="30"
+            width="45"
+            height="28"
+            rx="2"
+            fill="none"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+          <line
+            x1="666"
+            y1="30"
+            x2="666"
+            y2="58"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.4"
+          />
+          <line
+            x1="644"
+            y1="44"
+            x2="689"
+            y2="44"
+            stroke="#3B82C4"
+            stroke-width="0.5"
+            opacity="0.4"
+          />
+
+          <!-- solar panel glow -->
+          <rect
+            x="535"
+            y="14"
+            width="55"
+            height="36"
+            rx="3"
+            fill="none"
+            stroke="#F9B700"
+            stroke-width="0.8"
+            opacity="0.3"
+          />
+          <rect
+            x="587"
+            y="20"
+            width="55"
+            height="36"
+            rx="3"
+            fill="none"
+            stroke="#F9B700"
+            stroke-width="0.8"
+            opacity="0.3"
+          />
+          <rect
+            x="639"
+            y="26"
+            width="55"
+            height="36"
+            rx="3"
+            fill="none"
+            stroke="#F9B700"
+            stroke-width="0.8"
+            opacity="0.3"
+          />
+
+          <!-- house walls -->
+          <rect
+            x="553"
+            y="55"
+            width="110"
+            height="35"
+            fill="#374151"
+          />
+          <!-- window -->
+          <rect
+            x="568"
+            y="62"
+            width="28"
+            height="20"
+            rx="2"
+            fill="#93C5E8"
+            opacity="0.7"
+          />
+          <rect
+            x="605"
+            y="62"
+            width="28"
+            height="20"
+            rx="2"
+            fill="#93C5E8"
+            opacity="0.7"
+          />
+          <!-- door -->
+          <rect
+            x="630"
+            y="68"
+            width="18"
+            height="22"
+            rx="1"
+            fill="#1A2535"
+          />
+
+          <!-- House 2 left -->
+          <polygon
+            points="240,25 380,25 430,90 190,90"
+            fill="#2D3748"
+          />
+          <polygon
+            points="244,29 376,29 424,87 196,87"
+            fill="#3D4F5C"
+          />
+          <!-- solar panel left house -->
+          <rect
+            x="275"
+            y="42"
+            width="36"
+            height="22"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.85"
+          />
+          <rect
+            x="275"
+            y="42"
+            width="36"
+            height="22"
+            rx="2"
+            fill="none"
+            stroke="#60A5D8"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+          <rect
+            x="318"
+            y="47"
+            width="36"
+            height="22"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.85"
+          />
+          <rect
+            x="318"
+            y="47"
+            width="36"
+            height="22"
+            rx="2"
+            fill="none"
+            stroke="#60A5D8"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+
+          <rect
+            x="270"
+            y="58"
+            width="100"
+            height="32"
+            fill="#374151"
+          />
+          <rect
+            x="282"
+            y="64"
+            width="22"
+            height="16"
+            rx="1"
+            fill="#93C5E8"
+            opacity="0.6"
+          />
+          <rect
+            x="316"
+            y="64"
+            width="22"
+            height="16"
+            rx="1"
+            fill="#93C5E8"
+            opacity="0.6"
+          />
+
+          <!-- House 3 right -->
+          <polygon
+            points="830,30 960,30 1010,90 780,90"
+            fill="#2D3748"
+          />
+          <polygon
+            points="834,34 956,34 1004,87 784,87"
+            fill="#3D4F5C"
+          />
+          <rect
+            x="860"
+            y="46"
+            width="36"
+            height="22"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.85"
+          />
+          <rect
+            x="860"
+            y="46"
+            width="36"
+            height="22"
+            rx="2"
+            fill="none"
+            stroke="#60A5D8"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+          <rect
+            x="903"
+            y="51"
+            width="36"
+            height="22"
+            rx="2"
+            fill="#1E3A5F"
+            opacity="0.85"
+          />
+          <rect
+            x="903"
+            y="51"
+            width="36"
+            height="22"
+            rx="2"
+            fill="none"
+            stroke="#60A5D8"
+            stroke-width="0.5"
+            opacity="0.5"
+          />
+
+          <rect
+            x="844"
+            y="62"
+            width="105"
+            height="28"
+            fill="#374151"
+          />
+          <rect
+            x="857"
+            y="68"
+            width="22"
+            height="16"
+            rx="1"
+            fill="#93C5E8"
+            opacity="0.6"
+          />
+          <rect
+            x="891"
+            y="68"
+            width="22"
+            height="16"
+            rx="1"
+            fill="#93C5E8"
+            opacity="0.6"
+          />
+
+          <!-- trees right -->
+          <rect
+            x="1140"
+            y="62"
+            width="8"
+            height="32"
+            fill="#1A3A1A"
+          />
+          <polygon
+            points="1144,26 1129,66 1159,66"
+            fill="#256325"
+          />
+          <polygon
+            points="1144,14 1125,55 1163,55"
+            fill="#1E4A1E"
+          />
+
+          <rect
+            x="1100"
+            y="68"
+            width="6"
+            height="26"
+            fill="#1A3A1A"
+          />
+          <polygon
+            points="1103,38 1092,72 1114,72"
+            fill="#256325"
+          />
+
+          <!-- foreground grass -->
+          <rect
+            x="0"
+            y="88"
+            width="1200"
+            height="42"
+            fill="#1A3010"
+          />
+          <rect
+            x="0"
+            y="94"
+            width="1200"
+            height="36"
+            fill="#1E3A12"
+          />
+        </svg>
+      </div>
+
+      <div class="hero-content">
+        <div class="badge"><span class="badge-dot"></span>Solar Calculator Thailand</div>
+        <h1>ติดโซล่าเซลล์<br /><em>ประหยัดค่าไฟได้จริงแค่ไหน?</em></h1>
+        <p class="hero-sub">คำนวณผลตอบแทนจริง · ระยะคืนทุน · กำไรสุทธิ 25 ปี</p>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="wrap">
+      <!-- SAVE HERO CARD -->
+      <div class="save-card">
+        <div class="save-top">
+          <div>
+            <p class="eyebrow">ประหยัดค่าไฟต่อปี (ประมาณการ)</p>
+            <p
+              class="big-num"
+              id="heroSave"
+            >
+              –
+            </p>
+            <p class="big-unit">บาท / ปี</p>
+          </div>
+          <div class="save-pills">
+            <div class="pill">⏱ คืนทุนใน <strong id="pillPayback">–</strong> ปี</div>
+            <div class="pill">⚡ ผลิตได้ <strong id="pillKwh">–</strong> kWh/ปี</div>
+            <div class="pill">🏗 ต้นทุน <strong id="pillCost">–</strong> บาท</div>
+          </div>
+        </div>
+        <div class="pct-row">
+          <div class="pct-bar">
+            <div
+              class="pct-fill"
+              id="pctFill"
+              style="width: 0%"
+            ></div>
+          </div>
+          <span
+            class="pct-label"
+            id="pctLabel"
+            >– % ของค่าไฟทั้งปี</span
+          >
+        </div>
+      </div>
+
+      <!-- INPUTS -->
+      <div class="card">
+        <p class="section-title"><i></i>ปรับค่าตัวแปรของบ้านคุณ</p>
+
+        <div class="slider-item">
+          <div>
+            <p class="slider-name">⚡ ขนาดระบบโซล่า</p>
+            <input
+              type="range"
+              id="sysSize"
+              min="1"
+              max="20"
+              step="0.5"
+              value="5"
+            />
+          </div>
+          <div
+            class="val-box"
+            id="sysSizeVal"
+          >
+            5 kWp
+          </div>
+        </div>
+        <div class="slider-item">
+          <div>
+            <p class="slider-name">💡 ค่าไฟปัจจุบัน (บาท/เดือน)</p>
+            <input
+              type="range"
+              id="bill"
+              min="500"
+              max="20000"
+              step="100"
+              value="3000"
+            />
+          </div>
+          <div
+            class="val-box"
+            id="billVal"
+          >
+            3,000 ฿
+          </div>
+        </div>
+        <div class="slider-item">
+          <div>
+            <p class="slider-name">🔌 อัตราค่าไฟ (บาท/หน่วย)</p>
+            <input
+              type="range"
+              id="rate"
+              min="3"
+              max="6"
+              step="0.1"
+              value="4.5"
+            />
+          </div>
+          <div
+            class="val-box"
+            id="rateVal"
+          >
+            4.50 ฿
+          </div>
+        </div>
+        <div class="slider-item">
+          <div>
+            <p class="slider-name">☀️ ชั่วโมงแสงแดดต่อวัน</p>
+            <input
+              type="range"
+              id="sun"
+              min="3"
+              max="6"
+              step="0.1"
+              value="4.5"
+            />
+          </div>
+          <div
+            class="val-box"
+            id="sunVal"
+          >
+            4.5 ชม.
+          </div>
+        </div>
+        <div class="slider-item">
+          <div>
+            <p class="slider-name">🏗 ต้นทุนติดตั้ง (บาท/Wp)</p>
+            <input
+              type="range"
+              id="costPw"
+              min="20"
+              max="50"
+              step="1"
+              value="35"
+            />
+          </div>
+          <div
+            class="val-box"
+            id="costPwVal"
+          >
+            35 ฿/Wp
+          </div>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-3">
+        <div class="metric m-kwh">
+          <p class="metric-label">⚡ ผลิตไฟต่อปี</p>
+          <p
+            class="metric-val blue"
+            id="m1"
+          >
+            –
+          </p>
+          <p class="metric-unit">kWh</p>
+        </div>
+        <div class="metric m-payback">
+          <p class="metric-label">⏱ คืนทุนใน</p>
+          <p
+            class="metric-val amber"
+            id="m3"
+          >
+            –
+          </p>
+          <p class="metric-unit">ปี</p>
+        </div>
+        <div class="metric m-cost">
+          <p class="metric-label">💸 เงินลงทุน</p>
+          <p
+            class="metric-val orange"
+            id="m4"
+          >
+            –
+          </p>
+          <p class="metric-unit">บาท</p>
+        </div>
+      </div>
+
+      <div class="net-card">
+        <div class="net-grid">
+          <div>
+            <p class="net-label">📈 กำไรสุทธิ 25 ปี</p>
+            <p
+              class="net-val"
+              id="m5"
+            >
+              –
+            </p>
+            <p class="net-unit">บาท (หลังหักต้นทุน)</p>
+          </div>
+          <div>
+            <p class="net-label">📅 ประหยัดต่อเดือน</p>
+            <p
+              class="net-val neutral"
+              id="m6"
+            >
+              –
+            </p>
+            <p class="net-unit">บาท / เดือน</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <p
+            class="section-title"
+            style="margin: 0"
+          >
+            <i></i>ผลประหยัดสะสม 25 ปี
+          </p>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+            <span
+              class="be-badge"
+              id="beBadge"
+              >คืนทุนปีที่ –</span
+            >
+            <div class="legend">
+              <div class="leg-item">
+                <div
+                  class="leg-line"
+                  style="background: #16a34a"
+                ></div>
+                ผลประหยัด
+              </div>
+              <div class="leg-item">
+                <div class="leg-line leg-dashed"></div>
+                ต้นทุน
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas
+            id="chartCanvas"
+            role="img"
+            aria-label="กราฟผลประหยัดสะสม 25 ปี เทียบกับต้นทุนติดตั้ง"
+          ></canvas>
+        </div>
+      </div>
+
+      <!-- ASSUMPTIONS -->
+      <div class="assumptions">
+        <p
+          class="section-title"
+          style="margin-bottom: 1rem"
+        >
+          <i></i>สมมติฐานการคำนวณ
+        </p>
+        <div class="a-grid">
+          <div class="a-item"><span class="a-key">Degradation</span>0.5% ต่อปี</div>
+          <div class="a-item"><span class="a-key">ค่าไฟปรับขึ้น</span>3% ต่อปีเฉลี่ย</div>
+          <div class="a-item"><span class="a-key">ระบบ</span>On-grid ไม่มีแบตเตอรี่</div>
+          <div class="a-item"><span class="a-key">ประสิทธิภาพ</span>80% (System eff.)</div>
+          <div class="a-item"><span class="a-key">บำรุงรักษา</span>ไม่รวม ~2,000 ฿/ปี</div>
+          <div class="a-item"><span class="a-key">อายุแผง</span>25 ปี</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      SolarSave · ข้อมูลเพื่อประมาณการเบื้องต้นเท่านั้น ไม่ใช่คำแนะนำทางวิศวกรรม
+    </div>
+
+    <script>
+      let chart = null;
+      function fmt(n) {
+        return Math.round(n).toLocaleString("th-TH");
+      }
+
+      function updateSliderBg(el) {
+        const min = parseFloat(el.min),
+          max = parseFloat(el.max),
+          val = parseFloat(el.value);
+        const pct = (((val - min) / (max - min)) * 100).toFixed(1);
+        el.style.setProperty("--pct", pct + "%");
+        el.style.background = `linear-gradient(90deg,#22C55E ${pct}%,#E2E8F0 ${pct}%)`;
+      }
+
+      function calc() {
+        const kWp = parseFloat(document.getElementById("sysSize").value);
+        const bill = parseFloat(document.getElementById("bill").value);
+        const rate = parseFloat(document.getElementById("rate").value);
+        const sun = parseFloat(document.getElementById("sun").value);
+        const costPw = parseFloat(document.getElementById("costPw").value);
+
+        ["sysSize", "bill", "rate", "sun", "costPw"].forEach((id) =>
+          updateSliderBg(document.getElementById(id)),
+        );
+
+        document.getElementById("sysSizeVal").textContent = kWp + " kWp";
+        document.getElementById("billVal").textContent = fmt(bill) + " ฿";
+        document.getElementById("rateVal").textContent = rate.toFixed(2) + " ฿";
+        document.getElementById("sunVal").textContent = sun.toFixed(1) + " ชม.";
+        document.getElementById("costPwVal").textContent = costPw + " ฿/Wp";
+
+        const annualKwh = kWp * sun * 365 * 0.8;
+        const annualSave = annualKwh * rate;
+        const totalCost = kWp * 1000 * costPw;
+        const payback = totalCost / annualSave;
+        const monthly = annualSave / 12;
+        const annualBill = bill * 12;
+        const pct = Math.min(100, (annualSave / annualBill) * 100);
+
+        document.getElementById("heroSave").textContent = fmt(annualSave);
+        document.getElementById("pillPayback").textContent =
+          payback < 99 ? payback.toFixed(1) : ">99";
+        document.getElementById("pillKwh").textContent = fmt(annualKwh);
+        document.getElementById("pillCost").textContent = fmt(totalCost);
+        document.getElementById("pctFill").style.width = pct + "%";
+        document.getElementById("pctLabel").textContent = Math.round(pct) + "% ของค่าไฟทั้งปี";
+        document.getElementById("m1").textContent = fmt(annualKwh);
+        document.getElementById("m3").textContent =
+          payback < 99 ? payback.toFixed(1) + " ปี" : ">99 ปี";
+        document.getElementById("m4").textContent = fmt(totalCost);
+        document.getElementById("m6").textContent = fmt(monthly);
+
+        const labels = [],
+          cumSave = [],
+          costLine = [];
+        let cum = 0,
+          cr = rate,
+          eff = 1.0,
+          beIdx = -1;
+        for (let y = 1; y <= 25; y++) {
+          labels.push("ปี " + y);
+          eff *= 0.995;
+          cr *= 1.03;
+          cum += kWp * sun * 365 * 0.8 * eff * cr;
+          cumSave.push(Math.round(cum));
+          costLine.push(Math.round(totalCost));
+          if (beIdx < 0 && cum >= totalCost) beIdx = y;
+        }
+        const net25 = cumSave[24] - totalCost;
+        document.getElementById("m5").textContent = (net25 >= 0 ? "+" : "") + fmt(net25);
+        document.getElementById("beBadge").textContent =
+          beIdx > 0 ? "คืนทุนปีที่ " + beIdx : "ยังไม่คืนทุน";
+
+        if (chart) chart.destroy();
+        const ctx = document.getElementById("chartCanvas").getContext("2d");
+        const grad = ctx.createLinearGradient(0, 0, 0, 210);
+        grad.addColorStop(0, "rgba(34,197,94,0.18)");
+        grad.addColorStop(1, "rgba(34,197,94,0.01)");
+
+        chart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [
+              {
+                label: "ผลประหยัดสะสม",
+                data: cumSave,
+                borderColor: "#16A34A",
+                backgroundColor: grad,
+                borderWidth: 2.5,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHoverBackgroundColor: "#16A34A",
+                pointHoverBorderColor: "#fff",
+                pointHoverBorderWidth: 2,
+                fill: true,
+                tension: 0.4,
+              },
+              {
+                label: "ต้นทุน",
+                data: costLine,
+                borderColor: "#F97316",
+                borderWidth: 1.5,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: "#0F172A",
+                borderColor: "#334155",
+                borderWidth: 1,
+                titleColor: "#94A3B8",
+                bodyColor: "#F8FAFC",
+                padding: 10,
+                cornerRadius: 10,
+                callbacks: {
+                  label: (c) =>
+                    c.dataset.label + ": " + Math.round(c.parsed.y).toLocaleString("th-TH") + " ฿",
+                },
+              },
+            },
+            scales: {
+              x: {
+                ticks: { maxTicksLimit: 7, color: "#94A3B8", font: { size: 10 } },
+                grid: { color: "#F1F5F9" },
+                border: { color: "transparent" },
+              },
+              y: {
+                ticks: {
+                  color: "#94A3B8",
+                  font: { size: 10 },
+                  callback: (v) => {
+                    if (v >= 1000000) return (v / 1000000).toFixed(1) + "M";
+                    if (v >= 1000) return (v / 1000).toFixed(0) + "k";
+                    return v;
+                  },
+                },
+                grid: { color: "#F1F5F9" },
+                border: { color: "transparent" },
+              },
+            },
+          },
+        });
+      }
+
+      ["sysSize", "bill", "rate", "sun", "costPw"].forEach((id) => {
+        const el = document.getElementById(id);
+        el.addEventListener("input", calc);
+        updateSliderBg(el);
+      });
+      calc();
+    </script>
+  </body>
+</html>

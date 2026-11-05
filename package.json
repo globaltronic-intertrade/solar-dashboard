@@ -1,0 +1,13 @@
+{
+  "name": "gti-solar-dashboard",
+  "private": true,
+  "description": "GTI Solar Solutions demo hub — static pages served by GitHub Pages",
+  "scripts": {
+    "format": "prettier --write .",
+    "verify": "prettier --check . && node scripts/check-links.mjs",
+    "serve": "python -m http.server 8765"
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
+  }
+}

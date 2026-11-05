@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="../assets/gti-logo.png"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Solar Overview</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Kanit:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #f4f7f2;
+        --panel: #ffffff;
+        --panel-2: #eef4e8;
+        --border: #e2e9dc;
+        --text: #1d2b1f;
+        --muted: #6b786b;
+        --lime: #6f9a12;
+        --yellow: #e2b800;
+        --green: #3fa34a;
+        --icon-bg: #eef6df;
+        --radius: 10px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Poppins", "Kanit", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      svg.i {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+
+      /* ---------- main ---------- */
+      main {
+        padding: 22px 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+      }
+      .top {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .top h1 {
+        font-size: 22px;
+        font-weight: 600;
+      }
+      .top p {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .top .logo {
+        height: 52px;
+        width: auto;
+        display: block;
+        padding-right: 16px;
+        border-right: 1px solid var(--border);
+      }
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 38px;
+        padding: 0 12px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--text);
+        font-family: inherit;
+        cursor: pointer;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 14px;
+        min-width: 0;
+        box-shadow: 0 1px 3px rgba(30, 50, 30, 0.06);
+      }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        gap: 8px;
+      }
+      .panel-head h2 {
+        font-size: 13px;
+        font-weight: 500;
+      }
+      .kebab {
+        color: var(--muted);
+        background: none;
+        border: 0;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      /* KPI cards */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .kpi {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 14px;
+      }
+      .ring-ico {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--icon-bg);
+        display: grid;
+        place-items: center;
+        color: var(--lime);
+        flex-shrink: 0;
+      }
+      .ring-ico svg.i {
+        width: 22px;
+        height: 22px;
+      }
+      .kpi .lbl {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .kpi .val {
+        font-size: 22px;
+        font-weight: 600;
+        margin: 2px 0;
+        white-space: nowrap;
+      }
+      .kpi .val small {
+        font-size: 13px;
+        font-weight: 500;
+        margin-left: 4px;
+      }
+
+      /* grid */
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+        grid-template-areas:
+          "energy battery"
+          "weekly flow";
+        gap: 10px;
+      }
+      .energy {
+        grid-area: energy;
+        display: flex;
+        flex-direction: column;
+      }
+      .battery {
+        grid-area: battery;
+        display: flex;
+        flex-direction: column;
+      }
+      .weekly {
+        grid-area: weekly;
+        display: flex;
+        flex-direction: column;
+      }
+      .flow {
+        grid-area: flow;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* power flow: PV ด้านบน, Load ซ้ายล่าง, Grid ขวาล่าง */
+      .pf {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px 0 26px;
+      }
+      .pf-stage {
+        position: relative;
+        width: 100%;
+        max-width: 340px;
+        aspect-ratio: 320 / 240;
+      }
+      .pf-stage > svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      .pf .track {
+        fill: none;
+        stroke: #e6ebf2;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .pf .wire {
+        fill: none;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 10 8;
+        animation: pfDash 1s linear infinite;
+        transition: opacity 0.4s;
+      }
+      .pf .wire.pv {
+        stroke: #f0a35e;
+      }
+      .pf .wire.grid-in {
+        stroke: #4fa3f7;
+      }
+      .pf .wire.off {
+        opacity: 0;
+      }
+      @keyframes pfDash {
+        to {
+          stroke-dashoffset: -18;
+        }
+      }
+      .pf-node {
+        position: absolute;
+        width: 21%;
+        aspect-ratio: 1;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(160deg, #b9d3ff 0%, #7aa8f5 55%, #a9c6f7 100%);
+        color: #fff;
+        line-height: 1.15;
+        text-align: center;
+        box-shadow:
+          0 0 0 6px rgba(122, 168, 245, 0.13),
+          0 0 0 7px rgba(122, 168, 245, 0.18),
+          0 6px 14px rgba(80, 120, 200, 0.25);
+      }
+      .pf-node svg.i {
+        width: 22px;
+        height: 22px;
+        stroke-width: 1.5;
+        margin-bottom: 2px;
+      }
+      .pf-node b {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .pf-node small {
+        font-size: 10px;
+        opacity: 0.9;
+      }
+      .pf-label {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .pf-node.pf-top .pf-label {
+        bottom: calc(100% + 12px);
+      }
+      .pf-node:not(.pf-top) .pf-label {
+        top: calc(100% + 12px);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .pf .wire {
+          animation: none;
+        }
+      }
+
+      .controls {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      select.chip,
+      .icon-btn {
+        height: 26px;
+        font-size: 11px;
+        padding: 0 8px;
+      }
+      .icon-btn {
+        width: 28px;
+        justify-content: center;
+        padding: 0;
+      }
+      select.chip {
+        appearance: none;
+        padding-right: 22px;
+        background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+        background-position:
+          calc(100% - 11px) 11px,
+          calc(100% - 7px) 11px;
+        background-size: 4px 4px;
+        background-repeat: no-repeat;
+      }
+
+      .chart-box {
+        position: relative;
+        flex: 1;
+        min-height: 210px;
+      }
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 22px;
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .legend i {
+        display: inline-block;
+        width: 18px;
+        height: 0;
+        border-top: 2px solid var(--yellow);
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .legend i.dash {
+        border-top-style: dashed;
+        border-color: #8f9a6a;
+      }
+
+      /* battery */
+      .batt-body {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        padding: 4px 0 8px;
+      }
+      .donut {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        flex-shrink: 0;
+      }
+      .donut svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .donut .pct {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 30px;
+        font-weight: 600;
+      }
+      .donut .pct small {
+        font-size: 13px;
+      }
+      .batt-info {
+        display: grid;
+        gap: 10px;
+        font-size: 11px;
+      }
+      .batt-info .row {
+        display: flex;
+        gap: 6px;
+        align-items: flex-start;
+      }
+      .batt-info .row svg.i {
+        width: 14px;
+        height: 14px;
+        color: var(--lime);
+        margin-top: 1px;
+      }
+      .batt-info b {
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .batt-info span {
+        color: var(--muted);
+        font-size: 10px;
+        display: block;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--panel-2);
+        border-radius: 999px;
+        padding: 3px 10px;
+        font-size: 10px;
+      }
+      .pill::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+
+      /* responsive */
+      @media (max-width: 1100px) {
+        .kpis {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .grid {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          grid-template-areas: "energy energy" "battery flow" "weekly weekly";
+        }
+      }
+      @media (max-width: 760px) {
+        main {
+          padding: 16px;
+        }
+        .kpis {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-areas: "energy" "battery" "flow" "weekly";
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="../assets/fit-screen.js"></script>
+    <!-- ---------- Main ---------- -->
+    <main>
+      <div class="top">
+        <img
+          class="logo"
+          src="../assets/gti-logo.png"
+          alt="GTI logo"
+        />
+        <div>
+          <h1>Solar Overview</h1>
+          <p>Monitor your system performance in real time</p>
+        </div>
+      </div>
+
+      <!-- KPI row -->
+      <section class="kpis">
+        <div class="panel kpi">
+          <div class="ring-ico">
+            <svg
+              class="i"
+              viewBox="0 0 24 24"
+              style="fill: var(--yellow); stroke: none"
+            >
+              <path d="M13 2L4 14h7l-1 8 9-12h-7z" />
+            </svg>
+          </div>
+          <div>
+            <div class="lbl">Current Power</div>
+            <div class="val"><span id="curPower">6.84</span><small>kW</small></div>
+          </div>
+        </div>
+        <div class="panel kpi">
+          <div class="ring-ico">
+            <svg
+              class="i"
+              viewBox="0 0 24 24"
+            >
+              <rect
+                x="3"
+                y="5"
+                width="18"
+                height="16"
+                rx="2"
+              />
+              <path d="M3 10h18M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2" />
+            </svg>
+          </div>
+          <div>
+            <div class="lbl">Energy Today</div>
+            <div class="val"><span id="energyToday">38.6</span><small>kWh</small></div>
+          </div>
+        </div>
+        <div class="panel kpi">
+          <div class="ring-ico">
+            <svg
+              class="i"
+              viewBox="0 0 24 24"
+            >
+              <path d="M4 18a9 9 0 1 1 16 0" />
+              <path d="M12 13l4-4" />
+              <circle
+                cx="12"
+                cy="14"
+                r="1.5"
+              />
+            </svg>
+          </div>
+          <div>
+            <div class="lbl">Solar Efficiency</div>
+            <div class="val">94.2<small>%</small></div>
+          </div>
+        </div>
+        <div class="panel kpi">
+          <div class="ring-ico">
+            <svg
+              class="i"
+              viewBox="0 0 24 24"
+            >
+              <path d="M5 19c0-9 6-14 15-15-1 9-6 15-15 15z" />
+              <path d="M5 19l8-8" />
+            </svg>
+          </div>
+          <div>
+            <div class="lbl">Carbon Offset</div>
+            <div class="val">24.7<small>kg</small></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <!-- Energy production -->
+        <div class="panel energy">
+          <div class="panel-head">
+            <h2>Energy Production</h2>
+            <div class="controls">
+              <select
+                class="chip"
+                aria-label="Range"
+              >
+                <option>Today</option>
+                <option>Yesterday</option>
+                <option>This week</option>
+              </select>
+              <button
+                class="chip icon-btn"
+                title="Pick date"
+              >
+                <svg
+                  class="i"
+                  viewBox="0 0 24 24"
+                  style="width: 13px; height: 13px"
+                >
+                  <rect
+                    x="3"
+                    y="5"
+                    width="18"
+                    height="16"
+                    rx="2"
+                  />
+                  <path d="M3 10h18M8 3v4M16 3v4" />
+                </svg>
+              </button>
+              <button class="kebab">⋮</button>
+            </div>
+          </div>
+          <div class="chart-box"><canvas id="prodChart"></canvas></div>
+          <div class="legend">
+            <span><i></i>Production</span><span><i class="dash"></i>Consumption</span>
+          </div>
+        </div>
+
+        <!-- Battery -->
+        <div class="panel battery">
+          <div class="panel-head">
+            <h2>Battery Storage</h2>
+            <button class="kebab">⋮</button>
+          </div>
+          <div class="batt-body">
+            <div class="donut">
+              <svg viewBox="0 0 100 100">
+                <defs>
+                  <linearGradient
+                    id="battGrad"
+                    x1="0"
+                    y1="0"
+                    x2="1"
+                    y2="1"
+                  >
+                    <stop
+                      offset="0"
+                      stop-color="#e2b800"
+                    />
+                    <stop
+                      offset="1"
+                      stop-color="#8fd14a"
+                    />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  stroke="#e7eee2"
+                  stroke-width="10"
+                  fill="none"
+                />
+                <circle
+                  id="battArc"
+                  cx="50"
+                  cy="50"
+                  r="42"
+                  stroke="url(#battGrad)"
+                  stroke-width="10"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-dasharray="263.9"
+                  stroke-dashoffset="58"
+                />
+              </svg>
+              <div class="pct">
+                <span><span id="battPct">78</span><small>%</small></span>
+              </div>
+            </div>
+            <div class="batt-info">
+              <div class="row">
+                <svg
+                  class="i"
+                  viewBox="0 0 24 24"
+                  style="fill: var(--yellow); stroke: none"
+                >
+                  <path d="M13 2L4 14h7l-1 8 9-12h-7z" />
+                </svg>
+                <div><b>10.4 kWh</b><span>available</span></div>
+              </div>
+              <div><span class="pill">Charging</span></div>
+              <div class="row">
+                <svg
+                  class="i"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="9"
+                  />
+                  <path d="M12 7v5l3 2" />
+                </svg>
+                <div><b>1h 24m</b><span>until full</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly output -->
+        <div class="panel weekly">
+          <div class="panel-head">
+            <h2>Weekly Output</h2>
+            <div class="controls">
+              <select
+                class="chip"
+                aria-label="Unit"
+              >
+                <option>kWh</option>
+                <option>MWh</option>
+              </select>
+              <button class="kebab">⋮</button>
+            </div>
+          </div>
+          <div
+            class="chart-box"
+            style="min-height: 170px"
+          >
+            <canvas id="weekChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Power flow -->
+        <div class="panel flow">
+          <div class="panel-head">
+            <h2>Power Flow</h2>
+            <button class="kebab">⋮</button>
+          </div>
+          <div class="pf">
+            <div class="pf-stage">
+              <svg
+                viewBox="0 0 320 240"
+                aria-hidden="true"
+              >
+                <!-- เส้นพื้น -->
+                <path
+                  class="track"
+                  d="M156 92 V170 Q156 176 150 176 H86"
+                />
+                <path
+                  class="track"
+                  d="M164 92 V170 Q164 176 170 176 H234"
+                />
+                <path
+                  class="track"
+                  d="M234 188 H86"
+                />
+                <!-- เส้นที่มีไฟไหล (ทิศทางตามลำดับจุดใน path) -->
+                <path
+                  id="pfPvLoad"
+                  class="wire pv"
+                  d="M156 92 V170 Q156 176 150 176 H86"
+                />
+                <path
+                  id="pfPvGrid"
+                  class="wire pv"
+                  d="M164 92 V170 Q164 176 170 176 H234"
+                />
+                <path
+                  id="pfGridLoad"
+                  class="wire grid-in"
+                  d="M234 188 H86"
+                />
+              </svg>
+              <div
+                class="pf-node pf-top"
+                style="left: 50%; top: 25%"
+              >
+                <span class="pf-label">PV</span>
+                <svg
+                  class="i"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M4 20l2-9h12l2 9z" />
+                  <path
+                    d="M5 15.5h14M10 11l-.7 9M14 11l.7 9M12 2v2M7.5 4.5l1 1M16.5 4.5l-1 1M9.5 9a2.5 2.5 0 0 1 5 0"
+                  />
+                </svg>
+                <b id="pfPv">0.000</b><small>kW</small>
+              </div>
+              <div
+                class="pf-node"
+                style="left: 17%; top: 75%"
+              >
+                <span class="pf-label">Load</span>
+                <svg
+                  class="i"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
+                  <path d="M12.5 11.5l-1.5 2.5h2l-1.5 2.5" />
+                </svg>
+                <b id="pfLoad">0.000</b><small>kW</small>
+              </div>
+              <div
+                class="pf-node"
+                style="left: 83%; top: 75%"
+              >
+                <span
+                  class="pf-label"
+                  id="pfGridLabel"
+                  >Grid</span
+                >
+                <svg
+                  class="i"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2L8 22M12 2l4 20M5 7h14M7 12h10M9.5 7L14 12 9 17M14.5 7L10 12l5 5" />
+                </svg>
+                <b id="pfGrid">0.000</b><small>kW</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      Chart.defaults.font.family = "Poppins, sans-serif";
+      Chart.defaults.color = "#6b786b";
+      const gridColor = "rgba(0,0,0,.07)";
+
+      /* ---------- Energy Production (mock 6AM–7PM) ---------- */
+      const hours = [],
+        prod = [],
+        cons = [];
+      for (let h = 6; h <= 19; h += 0.25) {
+        const hr = Math.floor(h),
+          m = Math.round((h - hr) * 60);
+        hours.push(
+          `${hr % 12 || 12}${m ? ":" + String(m).padStart(2, "0") : ""} ${hr < 12 ? "AM" : "PM"}`,
+        );
+        const x = (h - 6) / 13;
+        prod.push(+(Math.max(0, Math.sin(Math.PI * x)) * 7.2 + Math.random() * 0.25).toFixed(2));
+        cons.push(+(2.2 + Math.sin(Math.PI * x) * 1.6 + Math.sin(h * 1.4) * 0.35).toFixed(2));
+      }
+
+      const ctxP = document.getElementById("prodChart").getContext("2d");
+      const fill = ctxP.createLinearGradient(0, 0, 0, 260);
+      fill.addColorStop(0, "rgba(226,184,0,.35)");
+      fill.addColorStop(1, "rgba(226,184,0,0)");
+
+      // เส้นประแนวตั้งตอน hover
+      const hoverLine = {
+        id: "hoverLine",
+        afterDatasetsDraw(chart) {
+          const a = chart.tooltip?.getActiveElements?.();
+          if (!a || !a.length) return;
+          const { ctx, chartArea } = chart,
+            x = a[0].element.x;
+          ctx.save();
+          ctx.setLineDash([3, 3]);
+          ctx.strokeStyle = "rgba(0,0,0,.35)";
+          ctx.beginPath();
+          ctx.moveTo(x, chartArea.top);
+          ctx.lineTo(x, chartArea.bottom);
+          ctx.stroke();
+          ctx.restore();
+        },
+      };
+
+      new Chart(ctxP, {
+        type: "line",
+        data: {
+          labels: hours,
+          datasets: [
+            {
+              label: "Production",
+              data: prod,
+              borderColor: "#e2b800",
+              backgroundColor: fill,
+              fill: true,
+              borderWidth: 2,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 5,
+              pointHoverBackgroundColor: "#e2b800",
+            },
+            {
+              label: "Consumption",
+              data: cons,
+              borderColor: "#8f9a6a",
+              borderDash: [5, 4],
+              borderWidth: 1.5,
+              tension: 0.4,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "#ffffff",
+              borderColor: "#d5ddd0",
+              borderWidth: 1,
+              titleColor: "#6b786b",
+              bodyColor: "#1d2b1f",
+              bodyFont: { size: 13, weight: "600" },
+              padding: 10,
+              displayColors: false,
+              callbacks: { label: (c) => `${c.dataset.label}: ${c.parsed.y.toFixed(2)} kW` },
+            },
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                maxRotation: 0,
+                autoSkip: false,
+                font: { size: 10 },
+                callback(v, i) {
+                  return i % 12 === 0 ? this.getLabelForValue(v) : "";
+                },
+              },
+            },
+            y: {
+              min: 0,
+              max: 10,
+              ticks: { stepSize: 2, font: { size: 10 } },
+              grid: { color: gridColor },
+              border: { display: false },
+              title: { display: true, text: "kW", font: { size: 10 } },
+            },
+          },
+        },
+        plugins: [hoverLine],
+      });
+
+      /* ---------- Weekly Output ---------- */
+      const week = [32.4, 41.7, 45.2, 38.6, 42.9, 36.1, 28.7];
+      const today = (new Date().getDay() + 6) % 7; // Mon = 0
+      const ctxW = document.getElementById("weekChart").getContext("2d");
+      const barGrad = ctxW.createLinearGradient(0, 0, 0, 200);
+      barGrad.addColorStop(0, "#9fd03a");
+      barGrad.addColorStop(1, "#5f9a1e");
+
+      const valueLabels = {
+        id: "valueLabels",
+        afterDatasetsDraw(chart) {
+          const { ctx } = chart;
+          ctx.save();
+          ctx.fillStyle = "#1d2b1f";
+          ctx.font = "500 10px Poppins";
+          ctx.textAlign = "center";
+          chart.getDatasetMeta(0).data.forEach((bar, i) => ctx.fillText(week[i], bar.x, bar.y - 6));
+          ctx.restore();
+        },
+      };
+
+      new Chart(ctxW, {
+        type: "bar",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [
+            {
+              data: week,
+              backgroundColor: week.map((_, i) => (i === today ? "#e2b800" : barGrad)),
+              borderRadius: 3,
+              barPercentage: 0.45,
+              categoryPercentage: 0.9,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 16 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (c) => `${c.parsed.y} kWh` } },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: {
+              min: 0,
+              max: 60,
+              ticks: { stepSize: 20, font: { size: 10 } },
+              grid: { color: gridColor },
+              border: { display: false },
+              title: { display: true, text: "kWh", font: { size: 10 } },
+            },
+          },
+        },
+        plugins: [valueLabels],
+      });
+
+      /* ---------- Simulated live values (แทนที่ด้วย API จริงได้) ---------- */
+      let power = 6.84,
+        energy = 38.6,
+        batt = 78;
+      const set = (id, v) => (document.getElementById(id).textContent = v);
+      /* ---------- Power flow ----------
+     pv > load  → ไฟเหลือขายเข้า Grid (PV → Grid)
+     pv < load  → ซื้อไฟจาก Grid (Grid → Load) */
+      let load = 5.2;
+      function updateFlow(pv) {
+        load = Math.min(9, Math.max(2, load + (Math.random() * 0.8 - 0.4)));
+        const net = pv - load; // + = export, - = import
+        set("pfPv", pv.toFixed(3));
+        set("pfLoad", load.toFixed(3));
+        set("pfGrid", Math.abs(net).toFixed(3));
+        set("pfGridLabel", net >= 0 ? "Grid (Export)" : "Grid (Import)");
+        document.getElementById("pfPvLoad").classList.toggle("off", pv <= 0);
+        document.getElementById("pfPvGrid").classList.toggle("off", net <= 0);
+        document.getElementById("pfGridLoad").classList.toggle("off", net >= 0);
+      }
+      updateFlow(power);
+      setInterval(() => {
+        power = Math.max(0, power + (Math.random() * 0.3 - 0.15));
+        energy += (power * 5) / 3600;
+        batt = Math.min(100, batt + 0.02);
+        set("curPower", power.toFixed(2));
+        updateFlow(power);
+        set("energyToday", energy.toFixed(1));
+        set("battPct", Math.round(batt));
+        document
+          .getElementById("battArc")
+          .setAttribute("stroke-dashoffset", (263.9 * (1 - batt / 100)).toFixed(1));
+      }, 5000);
+    </script>
+  </body>
+</html>
