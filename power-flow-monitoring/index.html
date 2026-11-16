@@ -1,0 +1,1615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="../assets/gti-logo.png"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>GTI Power Flow Monitoring</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f6f7fa;
+        --card: #ffffff;
+        --card-2: #f5f7f5;
+        --line: rgba(20, 21, 26, 0.08);
+        --flow-track: rgba(20, 21, 26, 0.2);
+        --ink: #14151a;
+        --ink-mid: rgba(20, 21, 26, 0.6);
+        --ink-dim: rgba(20, 21, 26, 0.38);
+        --on-accent: #ffffff;
+        --lime: #16a34a;
+        --lime-dim: rgba(22, 163, 74, 0.1);
+        --lime-glow-1: rgba(22, 163, 74, 0.05);
+        --lime-glow-2: rgba(22, 163, 74, 0.04);
+        --lime-border: rgba(22, 163, 74, 0.28);
+        --amber: #d97706;
+        --blue: #3b82f6;
+        --red: #dc2626;
+        --shadow: 0 1px 2px rgba(20, 21, 26, 0.04), 0 10px 24px -12px rgba(20, 21, 26, 0.1);
+        /* power-flow illustration */
+        --ill-wall: #e4e8ee;
+        --ill-wall-dark: #c9d0da;
+        --ill-roof: #8e99a8;
+        --ill-dark: #4b5563;
+        --ill-glass: #b9d7f5;
+        --ill-panel: #24457c;
+        --ill-panel-line: #7fa4dc;
+        --ill-ground: rgba(20, 21, 26, 0.07);
+        --font: "Inter", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        background: radial-gradient(700px 420px at 12% 0%, var(--lime-glow-1), transparent 60%),
+          radial-gradient(900px 500px at 100% 100%, var(--lime-glow-2), transparent 60%), var(--bg);
+        color: var(--ink);
+        font-family: var(--font);
+      }
+
+      .main {
+        max-width: 1760px;
+        margin: 0 auto;
+        height: 100vh;
+        padding: 1.6vh clamp(16px, 2.2vw, 30px);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      /* ---------------- Top bar ---------------- */
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 1.4vh;
+        flex-wrap: wrap;
+        flex: 0 0 auto;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand-mark {
+        height: 38px;
+        width: auto;
+        object-fit: contain;
+        display: block;
+        flex-shrink: 0;
+      }
+      .brand-name {
+        font-size: clamp(15px, 1.9vh, 18px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .brand-sub {
+        font-size: 10.5px;
+        color: var(--ink-dim);
+        letter-spacing: 0.04em;
+        margin-top: 1px;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-chip {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--lime-dim);
+        border: 1px solid var(--lime-border);
+        color: var(--lime);
+        border-radius: 999px;
+        padding: 7px 14px;
+        font-size: 11.5px;
+        font-weight: 700;
+      }
+      .status-chip .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--lime);
+      }
+      .clock-chip {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 7px 14px;
+        text-align: right;
+        box-shadow: var(--shadow);
+      }
+      .clock-chip .t {
+        font-size: 14px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .clock-chip .d {
+        font-size: 9.5px;
+        color: var(--ink-dim);
+      }
+
+      /* ---------------- Layout ---------------- */
+      .layout {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(320px, 43%) 1fr;
+        gap: 1.1vw;
+      }
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2vh;
+        min-height: 0;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 1.2vh 1.1vw;
+        min-height: 0;
+      }
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.9vh;
+      }
+      .card-title h3 {
+        font-size: clamp(12px, 1.5vh, 14px);
+        font-weight: 700;
+        flex: 1;
+      }
+      .em-head .card-title {
+        margin-bottom: 0;
+      }
+
+      /* KPI card */
+      .kpi-card {
+        flex: 0 0 auto;
+      }
+      .kpi-strip {
+        display: flex;
+        flex-wrap: wrap;
+        row-gap: 10px;
+      }
+      .kpi-item {
+        flex: 1;
+        min-width: 110px;
+        padding: 0 0.6vw;
+        border-right: 1px solid var(--line);
+      }
+      .kpi-item:last-child {
+        border-right: none;
+      }
+      .kpi-item .kv {
+        font-size: clamp(20px, 3.2vh, 30px);
+        font-weight: 600;
+        line-height: 1.05;
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi-item .kv .unit {
+        font-size: clamp(10px, 1.3vh, 13px);
+        font-weight: 500;
+        color: var(--ink-mid);
+        margin-left: 3px;
+      }
+      .kpi-item .kc {
+        font-size: clamp(9.5px, 1.2vh, 11.5px);
+        color: var(--ink-dim);
+        margin-top: 2px;
+      }
+
+      /* Flow card */
+      .flow-card {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .flow-wrap {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .flow-diagram-box {
+        position: relative;
+        width: 100%;
+        max-height: 100%;
+        aspect-ratio: 996/643;
+      }
+      .flow-art,
+      .flow-lines {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+      }
+      .ill-wall {
+        fill: var(--ill-wall);
+      }
+      .ill-wall-dark {
+        fill: var(--ill-wall-dark);
+      }
+      .ill-roof {
+        fill: var(--ill-roof);
+      }
+      .ill-dark {
+        fill: var(--ill-dark);
+      }
+      .ill-glass {
+        fill: var(--ill-glass);
+      }
+      .ill-ground {
+        fill: var(--ill-ground);
+      }
+      .ill-panel {
+        fill: var(--ill-panel);
+      }
+      .ill-panel-line {
+        fill: none;
+        stroke: var(--ill-panel-line);
+        stroke-width: 1.2;
+      }
+      .ill-stroke {
+        fill: none;
+        stroke: var(--ill-dark);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .ill-wire {
+        fill: none;
+        stroke: var(--ill-roof);
+        stroke-width: 1.4;
+      }
+
+      /* Value labels on the diagram — anchored in % of the 996×643 drawing. */
+      .fo {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        gap: clamp(2px, 0.4vh, 5px);
+        white-space: nowrap;
+        line-height: 1;
+      }
+      .fo-l {
+        align-items: flex-start;
+        transform: translateY(-50%);
+      }
+      .fo-c {
+        align-items: center;
+        transform: translate(-50%, -50%);
+      }
+      .fo-r {
+        align-items: flex-end;
+        transform: translate(-100%, -50%);
+      }
+      .fo .fo-main {
+        display: flex;
+        align-items: baseline;
+        gap: clamp(3px, 0.45vh, 6px);
+      }
+      .fo .fo-val {
+        font-size: clamp(16px, 3vh, 32px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+      }
+      .fo .fo-unit {
+        font-size: clamp(10px, 1.65vh, 17px);
+        font-weight: 600;
+        color: var(--ink-mid);
+      }
+      .fo .fo-cap {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: clamp(8px, 1.1vh, 11.5px);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-dim);
+      }
+      .fo .fo-cap i {
+        width: clamp(5px, 0.75vh, 8px);
+        height: clamp(5px, 0.75vh, 8px);
+        border-radius: 50%;
+        background: currentColor;
+        display: inline-block;
+      }
+      .fo-pv .fo-cap {
+        color: var(--lime);
+      }
+      .fo-load .fo-cap {
+        color: var(--red);
+      }
+      .fo-grid .fo-cap {
+        color: var(--ink-mid);
+      }
+      .fo-pos-load {
+        left: 41%;
+        top: 28%;
+      }
+      .fo-pos-pv-top {
+        left: 96%;
+        top: 8.5%;
+      }
+      .fo-pos-pv-bottom {
+        left: 96%;
+        top: 60%;
+      }
+      .fo-pos-grid {
+        left: 18%;
+        top: 92%;
+      }
+      .fo-name {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        white-space: nowrap;
+        font-size: clamp(11px, 1.6vh, 17px);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .fo-name-load {
+        left: 44%;
+        top: 79%;
+      }
+      .fo-name-pv-top {
+        left: 84.6%;
+        top: 39.5%;
+      }
+      .fo-name-pv-bottom {
+        left: 85.6%;
+        top: 92%;
+      }
+
+      /* Energy lines: a grey track plus one fixed-size arrow travelling from the source to the load. */
+      .flow-line .track {
+        fill: none;
+        stroke: var(--flow-track);
+        stroke-width: 3;
+        stroke-linecap: round;
+      }
+      .flow-line .arrow {
+        fill: var(--lime);
+      }
+      /* No power on the line (0 kW) — hide the arrow, keep the track. */
+      .flow-line.idle .arrow {
+        display: none;
+      }
+
+      /* Self-consumption card */
+      .eco-card {
+        flex: 0 0 auto;
+        display: grid;
+        align-content: center;
+      }
+      .eco-strip {
+        display: flex;
+        gap: 1vw;
+      }
+      .eco-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.6vw;
+      }
+      .eco-item .ico {
+        width: clamp(30px, 4vh, 40px);
+        height: clamp(30px, 4vh, 40px);
+        border-radius: 11px;
+        background: var(--lime-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .eco-item .ico svg {
+        width: 62%;
+        height: 62%;
+        color: var(--lime);
+      }
+      .eco-item .ev {
+        font-size: clamp(15px, 2vh, 19px);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .eco-item .ev .unit {
+        font-size: 0.55em;
+        color: var(--ink-dim);
+      }
+      .eco-item .ec {
+        font-size: clamp(9px, 1.1vh, 10.5px);
+        color: var(--ink-dim);
+      }
+
+      /* Energy management cards */
+      .energy-card {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .em-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 0.7vh;
+        flex: 0 0 auto;
+      }
+      .em-tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--card-2);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 2px;
+      }
+      .em-tab {
+        font-size: clamp(9px, 1.1vh, 11px);
+        padding: 3px 9px;
+        border-radius: 7px;
+        color: var(--ink-mid);
+        font-weight: 600;
+      }
+      .em-tab.active {
+        background: var(--lime);
+        color: var(--on-accent);
+      }
+      .em-date {
+        font-size: clamp(9px, 1.1vh, 11px);
+        color: var(--ink-mid);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 4px 10px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .em-stats {
+        display: flex;
+        gap: 1.2vw;
+        margin-bottom: 0.7vh;
+        flex: 0 0 auto;
+      }
+      .em-stat {
+        flex: 1;
+        min-width: 0;
+      }
+      .em-stat .es-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font-size: clamp(9px, 1.1vh, 11px);
+        color: var(--ink-mid);
+        margin-bottom: 3px;
+      }
+      .em-stat .es-top b {
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+        font-size: clamp(11px, 1.4vh, 13.5px);
+      }
+      .em-bar-track {
+        height: clamp(16px, 2.6vh, 22px);
+        border-radius: 7px;
+        overflow: hidden;
+        display: flex;
+        background: var(--card-2);
+      }
+      .em-bar-track .seg {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(8px, 1.05vh, 10.5px);
+        font-weight: 700;
+        color: var(--on-accent);
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .em-bar-track .seg.rest {
+        background: var(--card-2);
+        color: var(--ink-mid);
+      }
+      .em-bar-legend {
+        display: flex;
+        justify-content: space-between;
+        font-size: clamp(7.5px, 0.95vh, 9px);
+        color: var(--ink-dim);
+        margin-top: 4px;
+      }
+      .em-bar-legend b {
+        color: var(--ink-mid);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .chart-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        position: relative;
+      }
+      .chart-svg {
+        width: 100%;
+        height: 100%;
+      }
+      .chart-legend {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        margin-top: 2px;
+        flex: 0 0 auto;
+      }
+      .chart-legend span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: clamp(8px, 1vh, 9.5px);
+        color: var(--ink-mid);
+      }
+      .chart-legend i {
+        width: 9px;
+        height: 2.5px;
+        border-radius: 2px;
+        display: inline-block;
+      }
+      .sw-pv {
+        background: var(--lime);
+      }
+      .sw-load {
+        background: var(--red);
+      }
+      .sw-self {
+        background: var(--blue);
+      }
+      .sw-irr {
+        background: var(--amber);
+      }
+
+      /* Narrow screens (phone/tablet): cards take their content height and the page scrolls. */
+      @media (max-width: 980px) {
+        html,
+        body {
+          height: auto;
+          overflow: auto;
+        }
+        .main {
+          height: auto;
+          min-height: 100vh;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+          gap: 1.2vh;
+        }
+        .col > .card {
+          flex: 0 0 auto;
+        }
+        .energy-card .chart-wrap {
+          flex: 0 0 auto;
+          aspect-ratio: 800/190;
+        }
+        .fo .fo-val {
+          font-size: clamp(14px, 4vw, 32px);
+        }
+        .fo .fo-unit {
+          font-size: clamp(9px, 2vw, 17px);
+        }
+        .fo .fo-cap {
+          font-size: clamp(7px, 1.4vw, 11.5px);
+        }
+        .fo-name {
+          font-size: clamp(9px, 2.2vw, 17px);
+        }
+        .chart-legend {
+          flex-wrap: wrap;
+          row-gap: 4px;
+        }
+      }
+      @media (max-width: 560px) {
+        .em-stats {
+          flex-direction: column;
+          gap: 1vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="../assets/fit-screen.js"></script>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="brand">
+          <img
+            class="brand-mark"
+            src="../assets/gti-logo.png"
+            alt="GTI"
+          />
+          <div>
+            <div
+              class="brand-name"
+              data-i18n="brandName"
+            ></div>
+            <div
+              class="brand-sub"
+              data-i18n="brandSub"
+            ></div>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="status-chip">
+            <span class="dot"></span>
+            <span data-i18n="status"></span>
+          </div>
+          <div class="clock-chip">
+            <div
+              class="t"
+              id="clockTime"
+            ></div>
+            <div
+              class="d"
+              id="clockDate"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="col">
+          <div class="card kpi-card">
+            <div class="kpi-strip">
+              <div class="kpi-item">
+                <div class="kv">
+                  <span id="kpiYieldToday"></span
+                  ><span
+                    class="unit"
+                    data-i18n="unitKwh"
+                  ></span>
+                </div>
+                <div
+                  class="kc"
+                  data-i18n="kpiYield"
+                ></div>
+              </div>
+              <div class="kpi-item">
+                <div class="kv">
+                  <span id="kpiGridSupply"></span
+                  ><span
+                    class="unit"
+                    data-i18n="unitKwh"
+                  ></span>
+                </div>
+                <div
+                  class="kc"
+                  data-i18n="kpiGrid"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card flow-card">
+            <div class="flow-wrap">
+              <div class="flow-diagram-box">
+                <svg
+                  class="flow-art"
+                  viewBox="0 0 996 643"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <g id="pvArray">
+                      <ellipse
+                        class="ill-ground"
+                        cx="92"
+                        cy="96"
+                        rx="100"
+                        ry="9"
+                      />
+                      <path
+                        class="ill-stroke"
+                        d="M30 78v16M150 78v16M62 40v54M178 40v54"
+                      />
+                      <polygon
+                        class="ill-panel"
+                        points="40,0 190,0 150,80 0,80"
+                      />
+                      <path
+                        class="ill-panel-line"
+                        d="M30 20h150M20 40h150M10 60h150M77.5 0l-40 80M115 0l-40 80M152.5 0l-40 80"
+                      />
+                    </g>
+                  </defs>
+
+                  <!-- Factory (the load) -->
+                  <g transform="translate(-208 -125.5) scale(1.35)">
+                    <ellipse
+                      class="ill-ground"
+                      cx="480"
+                      cy="438"
+                      rx="160"
+                      ry="11"
+                    />
+                    <rect
+                      class="ill-dark"
+                      x="552"
+                      y="196"
+                      width="24"
+                      height="110"
+                      rx="3"
+                    />
+                    <path
+                      class="ill-roof"
+                      d="M352 300l62-40v40l62-40v40l62-40v40h70v8H352z"
+                    />
+                    <rect
+                      class="ill-wall"
+                      x="356"
+                      y="306"
+                      width="248"
+                      height="130"
+                    />
+                    <rect
+                      class="ill-wall-dark"
+                      x="538"
+                      y="306"
+                      width="66"
+                      height="130"
+                    />
+                    <path
+                      class="ill-glass"
+                      d="M374 326h36v24h-36zM424 326h36v24h-36zM474 326h36v24h-36zM374 368h36v24h-36zM474 368h36v24h-36z"
+                    />
+                    <rect
+                      class="ill-dark"
+                      x="424"
+                      y="368"
+                      width="36"
+                      height="68"
+                      rx="2"
+                    />
+                    <path
+                      class="ill-glass"
+                      d="M552 326h38v14h-38zM552 352h38v14h-38z"
+                    />
+                  </g>
+                  <!-- PV arrays -->
+                  <use
+                    href="#pvArray"
+                    transform="translate(720 95) scale(1.3)"
+                  />
+                  <use
+                    href="#pvArray"
+                    transform="translate(730 425) scale(1.3)"
+                  />
+                  <!-- Grid pylons -->
+                  <g transform="translate(-20 -170) scale(1.3)">
+                    <ellipse
+                      class="ill-ground"
+                      cx="92"
+                      cy="606"
+                      rx="74"
+                      ry="8"
+                    />
+                    <path
+                      class="ill-wire"
+                      d="M34 498Q62 512 92 500M76 478Q104 492 134 480"
+                    />
+                    <path
+                      class="ill-stroke"
+                      d="M62 486l-22 118M62 486l22 118M38 500h48M44 524h36M50 548l24-24M74 548l-24-24M46 572l32-24M78 572l-32-24M40 604l38-32M84 604l-38-32"
+                    />
+                    <path
+                      class="ill-stroke"
+                      d="M106 468l-20 136M106 468l22 136M80 482h52M88 508h38M94 536l24-28M120 536l-24-28M90 566l34-30M124 566l-34-30M86 604l40-38M128 604l-40-38"
+                    />
+                  </g>
+                </svg>
+                <svg
+                  class="flow-lines"
+                  id="flowLines"
+                  viewBox="0 0 996 643"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden="true"
+                ></svg>
+                <div
+                  class="fo-name fo-name-load"
+                  data-i18n="nameLoad"
+                ></div>
+                <div
+                  class="fo-name fo-name-pv-top"
+                  data-i18n="namePvTop"
+                ></div>
+                <div
+                  class="fo-name fo-name-pv-bottom"
+                  data-i18n="namePvBottom"
+                ></div>
+                <div class="fo fo-c fo-load fo-pos-load">
+                  <div class="fo-main">
+                    <span
+                      class="fo-val"
+                      id="fpLoad"
+                    ></span
+                    ><span
+                      class="fo-unit"
+                      data-i18n="unitKw"
+                    ></span>
+                  </div>
+                  <div class="fo-cap"><i></i><span data-i18n="capLoad"></span></div>
+                </div>
+                <div class="fo fo-r fo-pv fo-pos-pv-top">
+                  <div class="fo-main">
+                    <span
+                      class="fo-val"
+                      id="fpPvTop"
+                    ></span
+                    ><span
+                      class="fo-unit"
+                      data-i18n="unitKw"
+                    ></span>
+                  </div>
+                  <div class="fo-cap"><i></i><span data-i18n="capPv"></span></div>
+                </div>
+                <div class="fo fo-r fo-pv fo-pos-pv-bottom">
+                  <div class="fo-main">
+                    <span
+                      class="fo-val"
+                      id="fpPvBottom"
+                    ></span
+                    ><span
+                      class="fo-unit"
+                      data-i18n="unitKw"
+                    ></span>
+                  </div>
+                  <div class="fo-cap"><i></i><span data-i18n="capPv"></span></div>
+                </div>
+                <div class="fo fo-l fo-grid fo-pos-grid">
+                  <div class="fo-main">
+                    <span
+                      class="fo-val"
+                      id="fpGrid"
+                    ></span
+                    ><span
+                      class="fo-unit"
+                      data-i18n="unitKw"
+                    ></span>
+                  </div>
+                  <div class="fo-cap"><i></i><span data-i18n="capGrid"></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card eco-card">
+            <div class="card-title"><h3 data-i18n="selfTitle"></h3></div>
+            <div class="eco-strip">
+              <div class="eco-item">
+                <div class="ico">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect
+                      x="3"
+                      y="5"
+                      width="18"
+                      height="16"
+                      rx="2.5"
+                      stroke-width="1.7"
+                    />
+                    <path
+                      d="M3 9.5h18M8 3v4M16 3v4"
+                      stroke-width="1.7"
+                    />
+                    <path
+                      d="M7.2 13.2h.01M11.5 13.2h.01M15.8 13.2h.01M7.2 17h.01M11.5 17h.01M15.8 17h.01"
+                      stroke-width="2.4"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <div class="ev">
+                    <span id="ecoMonth"></span>
+                    <span
+                      class="unit"
+                      data-i18n="unitKwh"
+                    ></span>
+                  </div>
+                  <div
+                    class="ec"
+                    data-i18n="thisMonth"
+                  ></div>
+                </div>
+              </div>
+              <div class="eco-item">
+                <div class="ico">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.7"
+                  >
+                    <rect
+                      x="3"
+                      y="5"
+                      width="18"
+                      height="16"
+                      rx="2.5"
+                    />
+                    <path d="M3 9.5h18M8 3v4M16 3v4" />
+                    <path d="M15.5 15.2a3.6 3.6 0 1 1-1.1-2.6" />
+                    <path d="M15.7 11.6l-.1 2.7-2.7-.2" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="ev">
+                    <span id="ecoYear"></span>
+                    <span
+                      class="unit"
+                      data-i18n="unitKwh"
+                    ></span>
+                  </div>
+                  <div
+                    class="ec"
+                    data-i18n="thisYear"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col">
+          <div class="card energy-card">
+            <div class="em-head">
+              <div class="card-title"><h3 data-i18n="emTitle"></h3></div>
+              <div class="em-tabs">
+                <span
+                  class="em-tab active"
+                  data-i18n="tabDay"
+                ></span
+                ><span
+                  class="em-tab"
+                  data-i18n="tabMonth"
+                ></span>
+              </div>
+              <div
+                class="em-date"
+                id="dayDate"
+              ></div>
+            </div>
+            <div class="em-stats">
+              <div class="em-stat">
+                <div class="es-top"><span data-i18n="pvYield"></span><b id="dayPv"></b></div>
+                <div
+                  class="em-bar-track"
+                  id="dayPvBar"
+                ></div>
+                <div class="em-bar-legend">
+                  <span><span data-i18n="consumed"></span> <b id="daySelf"></b></span>
+                  <span><span data-i18n="fedToGrid"></span> <b id="dayFed"></b></span>
+                </div>
+              </div>
+              <div class="em-stat">
+                <div class="es-top">
+                  <span data-i18n="consumedByLoad"></span><b id="dayLoad"></b>
+                </div>
+                <div
+                  class="em-bar-track"
+                  id="dayLoadBar"
+                ></div>
+                <div class="em-bar-legend">
+                  <span><span data-i18n="fromPv"></span> <b id="dayFromPv"></b></span>
+                  <span><span data-i18n="fromGrid"></span> <b id="dayGrid"></b></span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg
+                class="chart-svg"
+                id="dayChart"
+                viewBox="0 0 800 190"
+                preserveAspectRatio="xMidYMid meet"
+              ></svg>
+            </div>
+            <div class="chart-legend">
+              <span><i class="sw-pv"></i><span data-i18n="legendPvKw"></span></span>
+              <span><i class="sw-load"></i><span data-i18n="legendLoadKw"></span></span>
+              <span><i class="sw-self"></i><span data-i18n="legendSelfKw"></span></span>
+              <span><i class="sw-irr"></i><span data-i18n="legendIrr"></span></span>
+            </div>
+          </div>
+
+          <div class="card energy-card">
+            <div class="em-head">
+              <div class="card-title"><h3 data-i18n="emTitle"></h3></div>
+              <div class="em-tabs">
+                <span
+                  class="em-tab"
+                  data-i18n="tabDay"
+                ></span
+                ><span
+                  class="em-tab active"
+                  data-i18n="tabMonth"
+                ></span>
+              </div>
+              <div
+                class="em-date"
+                id="monthDate"
+              ></div>
+            </div>
+            <div class="em-stats">
+              <div class="em-stat">
+                <div class="es-top"><span data-i18n="pvYield"></span><b id="monthPv"></b></div>
+                <div
+                  class="em-bar-track"
+                  id="monthPvBar"
+                ></div>
+                <div class="em-bar-legend">
+                  <span><span data-i18n="consumed"></span> <b id="monthSelf"></b></span>
+                  <span><span data-i18n="fedToGrid"></span> <b id="monthFed"></b></span>
+                </div>
+              </div>
+              <div class="em-stat">
+                <div class="es-top">
+                  <span data-i18n="consumedByLoad"></span><b id="monthLoad"></b>
+                </div>
+                <div
+                  class="em-bar-track"
+                  id="monthLoadBar"
+                ></div>
+                <div class="em-bar-legend">
+                  <span><span data-i18n="fromPv"></span> <b id="monthFromPv"></b></span>
+                  <span><span data-i18n="fromGrid"></span> <b id="monthGrid"></b></span>
+                </div>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg
+                class="chart-svg"
+                id="monthChart"
+                viewBox="0 0 760 190"
+                preserveAspectRatio="xMidYMid meet"
+              ></svg>
+            </div>
+            <div class="chart-legend">
+              <span><i class="sw-pv"></i><span data-i18n="legendPvKwh"></span></span>
+              <span><i class="sw-self"></i><span data-i18n="legendLoadKwh"></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="../assets/mock-solar.js"></script>
+    <script>
+      // Single i18n source for this page: every visible string lives in MESSAGES, keyed per locale.
+      var MESSAGES = {
+        en: {
+          brandName: "Clean Energy Dashboard",
+          brandSub: "GLOBALTRONIC INTERTRADE · SOLAR SOLUTIONS",
+          status: "Online · sample data",
+          unitKw: "kW",
+          unitKwh: "kWh",
+          kpiYield: "PV Yield today",
+          kpiGrid: "Supply from grid today",
+          nameLoad: "Factory",
+          namePvTop: "150 kWp - Rooftop A",
+          namePvBottom: "1.2 MWp - Rooftop B",
+          capLoad: "Load power",
+          capPv: "Output power",
+          capGrid: "From grid",
+          selfTitle: "PV Self-Consumption",
+          thisMonth: "This Month",
+          thisYear: "This Year",
+          emTitle: "Energy Management",
+          tabDay: "Day",
+          tabMonth: "Month",
+          pvYield: "PV yield",
+          consumed: "Consumed",
+          fedToGrid: "Fed to grid",
+          consumedByLoad: "Consumed by appliances",
+          fromPv: "From PV",
+          fromGrid: "From grid",
+          legendPvKw: "PV output (kW)",
+          legendLoadKw: "Total consumption (kW)",
+          legendSelfKw: "Consumed from PV (kW)",
+          legendIrr: "Irradiance (W/m²)",
+          legendPvKwh: "PV (kWh)",
+          legendLoadKwh: "Total Consumption (kWh)",
+        },
+      };
+      var LOCALE = "en";
+      var t = MESSAGES[LOCALE];
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        el.textContent = t[el.getAttribute("data-i18n")];
+      });
+
+      // ---- Sample plant: two PV systems feeding one factory, grid covers the rest ----
+      var PV_TOP = { kwp: 150, seed: 1 };
+      var PV_BOTTOM = { kwp: 1200, seed: 2 };
+      var REFRESH_MS = 3000;
+
+      function fmtNum(n, digits) {
+        return Number(n).toLocaleString("en-US", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        });
+      }
+      function fmtKwh(n) {
+        return fmtNum(n, 0) + " " + t.unitKwh;
+      }
+      function pad2(n) {
+        return (n < 10 ? "0" : "") + n;
+      }
+      function setText(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text;
+      }
+      function smoothstep(a, b, x) {
+        var k = Math.max(0, Math.min(1, (x - a) / (b - a)));
+        return k * k * (3 - 2 * k);
+      }
+
+      // Factory load (kW): night base load, a working-day plateau, a lunch dip, a quiet Sunday.
+      function loadKw(day, min) {
+        var sunday = MockSolar.dateOfDay(day).getDay() === 0;
+        var shift = smoothstep(450, 520, min) - smoothstep(1020, 1110, min);
+        var lunch = smoothstep(715, 730, min) - smoothstep(775, 795, min);
+        var work = (sunday ? 0.2 : 1) * (shift - 0.72 * lunch * shift);
+        var wave = 1 + 0.035 * Math.sin(min / 17 + day) + 0.02 * Math.sin(min / 5.1 + day * 2);
+        return (600 + 520 * work) * wave;
+      }
+      function pvTopKw(day, min) {
+        return MockSolar.pvKw(PV_TOP.kwp, day, min, PV_TOP.seed);
+      }
+      function pvBottomKw(day, min) {
+        return MockSolar.pvKw(PV_BOTTOM.kwp, day, min, PV_BOTTOM.seed);
+      }
+
+      // Energy totals (kWh) of one day from 00:00 to `uptoMin`.
+      function dayTotals(day, uptoMin) {
+        var tot = { pv: 0, self: 0, fed: 0, load: 0, grid: 0 };
+        for (var m = 0; m < uptoMin; m += MockSolar.STEP_MIN) {
+          var width = Math.min(MockSolar.STEP_MIN, uptoMin - m);
+          var mid = m + width / 2;
+          var pv = pvTopKw(day, mid) + pvBottomKw(day, mid);
+          var load = loadKw(day, mid);
+          var self = Math.min(pv, load);
+          var hours = width / 60;
+          tot.pv += pv * hours;
+          tot.load += load * hours;
+          tot.self += self * hours;
+          tot.fed += (pv - self) * hours;
+          tot.grid += (load - self) * hours;
+        }
+        return tot;
+      }
+      // Finished days never change — compute each once.
+      var fullDayCache = {};
+      function fullDay(day) {
+        if (!(day in fullDayCache)) fullDayCache[day] = dayTotals(day, 1440);
+        return fullDayCache[day];
+      }
+      function addTotals(a, b) {
+        Object.keys(a).forEach(function (k) {
+          a[k] += b[k];
+        });
+        return a;
+      }
+
+      // The same shape a site logger API would return — swap this function for a fetch() in a real build.
+      function readDashboard() {
+        var now = MockSolar.now();
+        var day = MockSolar.dayIndex(now);
+        var min = MockSolar.minuteOfDay(now);
+
+        var pvTop = pvTopKw(day, min) * MockSolar.jitter(0.015);
+        var pvBottom = pvBottomKw(day, min) * MockSolar.jitter(0.01);
+        var load = loadKw(day, min) * MockSolar.jitter(0.008);
+
+        var today = dayTotals(day, min);
+        var month = addTotals({ pv: 0, self: 0, fed: 0, load: 0, grid: 0 }, today);
+        var days = [];
+        for (var d = now.getDate() - 1; d >= 1; d--) {
+          var past = fullDay(day - d);
+          addTotals(month, past);
+          days.push({ day: now.getDate() - d, pv: past.pv, load: past.load });
+        }
+        days.push({ day: now.getDate(), pv: today.pv, load: today.load });
+
+        var yearSelf = today.self;
+        var firstDay = MockSolar.dayIndex(new Date(now.getFullYear(), 0, 1));
+        for (var y = firstDay; y < day; y++) yearSelf += fullDay(y).self;
+
+        var series = [];
+        for (var m = 0; m <= min; m += MockSolar.STEP_MIN) {
+          var pv = pvTopKw(day, m) + pvBottomKw(day, m);
+          var ld = loadKw(day, m);
+          series.push({
+            m: m,
+            pv: pv,
+            load: ld,
+            self: Math.min(pv, ld),
+            irr: MockSolar.irradiance(day, m, PV_BOTTOM.seed),
+          });
+        }
+
+        today.date = now.getFullYear() + "-" + pad2(now.getMonth() + 1) + "-" + pad2(now.getDate());
+        month.month = now.getFullYear() + "-" + pad2(now.getMonth() + 1);
+        month.days = days;
+        return {
+          now: {
+            load_kw: load,
+            pv_top_kw: pvTop,
+            pv_bottom_kw: pvBottom,
+            grid_kw: Math.max(0, load - pvTop - pvBottom),
+          },
+          today: today,
+          month: month,
+          year: { self: yearSelf },
+          day_series: series,
+        };
+      }
+
+      // Split bar: the first segment is part/total in `colorVar`, the rest is grey.
+      function setSplitBar(id, part, total, colorVar) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (!(total > 0)) {
+          el.innerHTML = "";
+          return;
+        }
+        var pct = Math.max(0, Math.min(100, (part / total) * 100));
+        var label = Math.round(pct);
+        var html = "";
+        if (label > 0)
+          html +=
+            '<div class="seg" style="width:' +
+            pct.toFixed(1) +
+            "%; background:var(" +
+            colorVar +
+            ')">' +
+            label +
+            "%</div>";
+        if (label < 100)
+          html +=
+            '<div class="seg rest" style="width:' +
+            (100 - pct).toFixed(1) +
+            '%">' +
+            (100 - label) +
+            "%</div>";
+        el.innerHTML = html;
+      }
+
+      function fillEnergyStats(prefix, e) {
+        setText(prefix + "Pv", fmtKwh(e.pv));
+        setText(prefix + "Self", fmtKwh(e.self));
+        setText(prefix + "Fed", fmtKwh(e.fed));
+        setText(prefix + "Load", fmtKwh(e.load));
+        setText(prefix + "FromPv", fmtKwh(e.self));
+        setText(prefix + "Grid", fmtKwh(e.grid));
+        setSplitBar(prefix + "PvBar", e.self, e.pv, "--lime");
+        setSplitBar(prefix + "LoadBar", e.self, e.load, "--amber");
+      }
+
+      // Round Y-axis maximum (1, 2, 2.5, 5, 10 × 10^n), at least 4 so the 4 grid steps stay whole.
+      function niceMax(v) {
+        if (!(v > 0)) return 4;
+        var p = Math.pow(10, Math.floor(Math.log10(v)));
+        var n = v / p;
+        return Math.max(4, (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p);
+      }
+      function fmtAxis(v) {
+        if (v >= 10000) return Math.round(v / 1000) + "k";
+        return Math.round(v).toLocaleString("en-US");
+      }
+
+      // Plot area shared by both charts.
+      var PAD_L = 34,
+        PLOT_W = 716,
+        PAD_T = 10,
+        PLOT_H = 158,
+        BASE_Y = PAD_T + PLOT_H;
+
+      function gridAndAxis(maxLeft, maxRight) {
+        var s = "";
+        for (var i = 0; i <= 4; i++) {
+          var y = (BASE_Y - (PLOT_H * i) / 4).toFixed(1);
+          s +=
+            '<line x1="34" y1="' +
+            y +
+            '" x2="750" y2="' +
+            y +
+            '" stroke="var(--line)" stroke-width="1"/>';
+          s +=
+            '<text x="28" y="' +
+            (+y + 3) +
+            '" font-size="8" fill="var(--ink-dim)" text-anchor="end">' +
+            fmtAxis((maxLeft * i) / 4) +
+            "</text>";
+          if (maxRight)
+            s +=
+              '<text x="756" y="' +
+              (+y + 3) +
+              '" font-size="8" fill="var(--amber)" text-anchor="start">' +
+              fmtAxis((maxRight * i) / 4) +
+              "</text>";
+        }
+        return s;
+      }
+      function pointX(m) {
+        return (PAD_L + (m / 1440) * PLOT_W).toFixed(1);
+      }
+      function pointY(v, max) {
+        return (BASE_Y - Math.min(v / max, 1) * PLOT_H).toFixed(1);
+      }
+      function linePath(series, key, max) {
+        return series
+          .map(function (p, i) {
+            return (i ? "L" : "M") + pointX(p.m) + "," + pointY(p[key], max);
+          })
+          .join(" ");
+      }
+      function areaPath(series, key, max) {
+        if (series.length < 2) return "";
+        return (
+          linePath(series, key, max) +
+          " L" +
+          pointX(series[series.length - 1].m) +
+          "," +
+          BASE_Y +
+          " L" +
+          pointX(series[0].m) +
+          "," +
+          BASE_Y +
+          " Z"
+        );
+      }
+
+      function renderDayChart(series) {
+        var maxKw = 0,
+          maxIrr = 0;
+        series.forEach(function (p) {
+          maxKw = Math.max(maxKw, p.pv, p.load);
+          maxIrr = Math.max(maxIrr, p.irr);
+        });
+        maxKw = niceMax(maxKw);
+        maxIrr = niceMax(Math.max(maxIrr, 1000));
+
+        var s = gridAndAxis(maxKw, maxIrr);
+        s += '<path d="' + areaPath(series, "pv", maxKw) + '" fill="var(--lime)" opacity="0.10"/>';
+        s +=
+          '<path d="' +
+          linePath(series, "irr", maxIrr) +
+          '" fill="none" stroke="var(--amber)" stroke-width="1.4" stroke-dasharray="4 2" opacity="0.85"/>';
+        s +=
+          '<path d="' +
+          linePath(series, "load", maxKw) +
+          '" fill="none" stroke="var(--red)" stroke-width="1.6" opacity="0.85"/>';
+        s +=
+          '<path d="' +
+          linePath(series, "self", maxKw) +
+          '" fill="none" stroke="var(--blue)" stroke-width="1.6" opacity="0.9"/>';
+        s +=
+          '<path d="' +
+          linePath(series, "pv", maxKw) +
+          '" fill="none" stroke="var(--lime)" stroke-width="2"/>';
+        for (var h = 0; h < 24; h += 3) {
+          s +=
+            '<text x="' +
+            pointX(h * 60) +
+            '" y="184" font-size="8.5" fill="var(--ink-dim)" text-anchor="middle">' +
+            pad2(h) +
+            ":00</text>";
+        }
+        // Dashed marker at the current time.
+        var nowX = pointX(MockSolar.minuteOfDay(MockSolar.now()));
+        s +=
+          '<line x1="' +
+          nowX +
+          '" y1="10" x2="' +
+          nowX +
+          '" y2="168" stroke="var(--ink-mid)" stroke-width="1.3" stroke-dasharray="3 3" opacity="0.7"/>' +
+          '<circle cx="' +
+          nowX +
+          '" cy="168" r="3" fill="var(--ink-mid)"/>';
+        document.getElementById("dayChart").innerHTML = s;
+      }
+
+      function renderMonthChart(monthStr, days) {
+        var parts = monthStr.split("-");
+        var nDays = new Date(+parts[0], +parts[1], 0).getDate();
+        var maxKwh = 0;
+        days.forEach(function (d) {
+          maxKwh = Math.max(maxKwh, d.pv, d.load);
+        });
+        maxKwh = niceMax(maxKwh);
+
+        var slot = PLOT_W / nDays;
+        var pvW = Math.min(14.3, slot * 0.62),
+          loadW = Math.min(10, slot * 0.44);
+        var s = gridAndAxis(maxKwh, null);
+        days.forEach(function (d) {
+          var x0 = PAD_L + (d.day - 1) * slot;
+          var hPv = Math.min(d.pv / maxKwh, 1) * PLOT_H,
+            hLoad = Math.min(d.load / maxKwh, 1) * PLOT_H;
+          if (hPv > 0)
+            s +=
+              '<rect x="' +
+              (x0 + slot * 0.15).toFixed(1) +
+              '" y="' +
+              (BASE_Y - hPv).toFixed(1) +
+              '" width="' +
+              pvW.toFixed(1) +
+              '" height="' +
+              hPv.toFixed(1) +
+              '" rx="' +
+              Math.min(pvW / 2, hPv / 2).toFixed(2) +
+              '" fill="var(--lime)"/>';
+          if (hLoad > 0)
+            s +=
+              '<rect x="' +
+              (x0 + slot * 0.15 + pvW * 0.5).toFixed(1) +
+              '" y="' +
+              (BASE_Y - hLoad).toFixed(1) +
+              '" width="' +
+              loadW.toFixed(1) +
+              '" height="' +
+              hLoad.toFixed(1) +
+              '" rx="' +
+              Math.min(loadW / 2, hLoad / 2).toFixed(2) +
+              '" fill="var(--blue)" opacity="0.85"/>';
+        });
+        for (var day = 1; day <= nDays; day += 2) {
+          s +=
+            '<text x="' +
+            (PAD_L + (day - 0.5) * slot).toFixed(1) +
+            '" y="184" font-size="7" fill="var(--ink-dim)" text-anchor="middle">' +
+            day +
+            "</text>";
+        }
+        document.getElementById("monthChart").innerHTML = s;
+      }
+
+      // Energy lines on the diagram: from = source, to = the factory wall (996×643 drawing units).
+      var FLOW_LINES = [
+        { id: "flowPvTop", from: [722, 196], to: [620, 296] },
+        { id: "flowPvBottom", from: [736, 506], to: [620, 440] },
+        { id: "flowGrid", from: [165, 548], to: [262, 440] },
+      ];
+      var FLOW_MIN_KW = 0.5; // below this the line counts as idle — hide the arrow
+      var ARROW_SPEED = 90; // drawing units per second, the same on every line
+      // Fixed-size arrow, tip at (0,0) pointing to +x — animateMotion rotates it along the line.
+      var ARROW_SHAPE = "-44,-2.2 -14,-2.2 -19,-9 0,0 -19,9 -14,2.2 -44,2.2";
+      (function drawFlowLines() {
+        var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var s = "";
+        FLOW_LINES.forEach(function (l) {
+          var d = "M" + l.from[0] + "," + l.from[1] + " L" + l.to[0] + "," + l.to[1];
+          var deg = (Math.atan2(l.to[1] - l.from[1], l.to[0] - l.from[0]) * 180) / Math.PI;
+          var dur =
+            Math.max(
+              1.4,
+              Math.hypot(l.to[0] - l.from[0], l.to[1] - l.from[1]) / ARROW_SPEED,
+            ).toFixed(2) + "s";
+          var arrow = still
+            ? '<polygon class="arrow" points="' +
+              ARROW_SHAPE +
+              '" transform="translate(' +
+              l.to[0] +
+              "," +
+              l.to[1] +
+              ") rotate(" +
+              deg.toFixed(1) +
+              ')"/>'
+            : '<polygon class="arrow" points="' +
+              ARROW_SHAPE +
+              '">' +
+              '<animateMotion dur="' +
+              dur +
+              '" repeatCount="indefinite" rotate="auto" path="' +
+              d +
+              '"/>' +
+              '<animate attributeName="opacity" dur="' +
+              dur +
+              '" repeatCount="indefinite" values="0;1;1;0" keyTimes="0;0.12;0.85;1"/>' +
+              "</polygon>";
+          s +=
+            '<g class="flow-line idle" id="' +
+            l.id +
+            '"><path class="track" d="' +
+            d +
+            '"/>' +
+            arrow +
+            "</g>";
+        });
+        document.getElementById("flowLines").innerHTML = s;
+      })();
+      function setFlowActive(id, kw) {
+        document.getElementById(id).classList.toggle("idle", !(kw > FLOW_MIN_KW));
+      }
+
+      function refreshDashboard() {
+        var res = readDashboard();
+        var n = res.now;
+        setText("kpiYieldToday", fmtNum(res.today.pv, 0));
+        setText("kpiGridSupply", fmtNum(res.today.grid, 0));
+        setText("fpLoad", fmtNum(n.load_kw, 0));
+        setText("fpGrid", fmtNum(n.grid_kw, 0));
+        setText("fpPvTop", fmtNum(n.pv_top_kw, 0));
+        setText("fpPvBottom", fmtNum(n.pv_bottom_kw, 0));
+        setFlowActive("flowPvTop", n.pv_top_kw);
+        setFlowActive("flowPvBottom", n.pv_bottom_kw);
+        setFlowActive("flowGrid", n.grid_kw);
+        setText("ecoMonth", fmtNum(res.month.self, 0));
+        setText("ecoYear", fmtNum(res.year.self, 0));
+
+        setText("dayDate", res.today.date);
+        fillEnergyStats("day", res.today);
+        renderDayChart(res.day_series);
+
+        setText("monthDate", res.month.month);
+        fillEnergyStats("month", res.month);
+        renderMonthChart(res.month.month, res.month.days);
+      }
+
+      function tickClock() {
+        var now = MockSolar.now();
+        setText("clockTime", now.toLocaleTimeString("en-GB"));
+        setText(
+          "clockDate",
+          now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+        );
+      }
+
+      refreshDashboard();
+      tickClock();
+      setInterval(refreshDashboard, REFRESH_MS);
+      setInterval(tickClock, 1000);
+    </script>
+  </body>
+</html>

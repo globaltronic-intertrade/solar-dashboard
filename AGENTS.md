@@ -17,4 +17,8 @@ so every change goes branch → PR → merge. Layout and page list: `README.md`.
 - Dashboards load `assets/fit-screen.js` as the first element in `<body>` (scale-to-fit, no scroll on
   landscape screens ≥1201 px; `?fit=0` turns it off). Sample data and Globaltronic names only.
 - Landing page copy lives in the `MESSAGES` dictionary in `index.html` (i18n layer, locale `th`).
-- Known debt: the moved pages still hardcode their copy and colors; the calculator formats money inline.
+- `multi-site-monitoring/` and `power-flow-monitoring/` take every number from `assets/mock-solar.js`
+  (clock-driven sun model, `?time=HH:MM` sets the demo clock) and every string from their own
+  `MESSAGES` dictionary (locale `en`); colors are `:root` tokens. New dashboards follow this pattern.
+- Known debt: the three older dashboards and the calculator still hardcode their copy and colors; the
+  calculator formats money inline.

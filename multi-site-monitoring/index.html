@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      href="../assets/gti-logo.png"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>GTI Multi-Site Monitoring</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f3f5fb;
+        --card: #ffffff;
+        --primary: #6c5dd3;
+        --primary-soft: rgba(108, 93, 211, 0.07);
+        --amber: #ffa53e;
+        --amber-soft: rgba(255, 165, 62, 0.06);
+        --amber-glow: rgba(255, 165, 62, 0.22);
+        --ok: #1f9d5c;
+        --ok-glow: rgba(31, 157, 92, 0.18);
+        --ok-soft: rgba(31, 157, 92, 0.12);
+        --ink: #1b2559;
+        --mid: #6e7b96;
+        --dim: #a6b0c3;
+        --border: #eef0f7;
+        --shadow: 0 8px 24px rgba(27, 37, 89, 0.06);
+        --curve-bg-1: #1b2559;
+        --curve-bg-2: #2b3670;
+        --curve-bg-3: #384485;
+        --curve-ink: rgba(255, 255, 255, 0.92);
+        --curve-dim: rgba(255, 255, 255, 0.55);
+        --curve-line: rgba(255, 255, 255, 0.14);
+        --font-body: "Inter", sans-serif;
+        --font-display: "Plus Jakarta Sans", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: radial-gradient(1100px 480px at 85% -8%, var(--primary-soft), transparent 60%),
+          radial-gradient(900px 420px at 8% 8%, var(--amber-soft), transparent 55%), var(--bg);
+        color: var(--ink);
+        font-family: var(--font-body);
+        min-height: 100vh;
+      }
+
+      h1,
+      h2,
+      .num {
+        font-family: var(--font-display);
+      }
+
+      .main {
+        max-width: 1840px;
+        margin: 0 auto;
+        padding: 26px 30px 22px;
+        min-width: 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 14px;
+      }
+      .page-heading {
+        min-width: 0;
+      }
+      .page-heading h1 {
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        line-height: 1;
+      }
+      .page-heading h1 img {
+        height: 1.5em;
+        width: auto;
+        flex-shrink: 0;
+      }
+      .header-right {
+        flex-shrink: 0;
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .sample-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ok-soft);
+        color: var(--ok);
+        border-radius: 999px;
+        padding: 9px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .sample-chip i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--ok);
+      }
+      .clock {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .clock .t {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .clock .d {
+        font-size: 13px;
+        color: var(--mid);
+      }
+      .capacity-readout {
+        font-family: var(--font-display);
+        font-size: 52px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        white-space: nowrap;
+      }
+      .capacity-readout b {
+        font-weight: inherit;
+      }
+      .capacity-readout span {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--mid);
+        margin-left: 4px;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+      }
+
+      .sites-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        align-items: start;
+      }
+      .site-block {
+        min-width: 0;
+      }
+      .site-block-header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border);
+      }
+      .site-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        align-self: center;
+        background: var(--ok);
+        box-shadow: 0 0 0 5px var(--ok-glow);
+      }
+      .site-block-header h2 {
+        white-space: nowrap;
+        font-size: 64px;
+        font-weight: 800;
+        line-height: 1;
+      }
+      .site-block-header .node {
+        font-family: var(--font-display);
+        font-size: 38px;
+        font-weight: 800;
+        margin-left: auto;
+        white-space: nowrap;
+      }
+      .site-block-header .node .u {
+        font-size: 0.8em;
+        font-weight: 700;
+        color: var(--mid);
+      }
+
+      .site-cards {
+        display: grid;
+        gap: 12px;
+      }
+
+      .perf-body {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+      .perf-body > div {
+        min-width: 0;
+      }
+      .perf-stat .lbl {
+        font-size: 28px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .perf-stat .lbl i {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary);
+      }
+      .perf-stat .val {
+        font-size: 56px;
+        font-weight: 800;
+        margin-top: 6px;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .perf-stat .val .u {
+        font-size: 0.5em;
+        color: var(--mid);
+        font-weight: 600;
+        letter-spacing: 0;
+        margin-left: 5px;
+      }
+      .perf-sub {
+        font-size: 30px;
+        font-weight: 800;
+        margin-top: 16px;
+        font-variant-numeric: tabular-nums;
+      }
+      .perf-sub .n {
+        font-size: 42px;
+      }
+      .perf-sub .u {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--mid);
+      }
+
+      /* Live "today's output" curve (the customer builds show a site camera here). */
+      .curve-frame {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        aspect-ratio: 16/9;
+        background: radial-gradient(ellipse at 30% 20%, var(--amber-glow), transparent 55%),
+          linear-gradient(160deg, var(--curve-bg-1), var(--curve-bg-2) 60%, var(--curve-bg-3));
+      }
+      .curve-frame svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .curve-frame .cap {
+        fill: var(--curve-ink);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .curve-frame .axis {
+        fill: var(--curve-dim);
+        font-size: 10px;
+      }
+      .curve-frame .base {
+        stroke: var(--curve-line);
+        stroke-width: 1;
+      }
+      .curve-frame .forecast {
+        fill: none;
+        stroke: var(--curve-dim);
+        stroke-width: 1.4;
+        stroke-dasharray: 4 4;
+      }
+      .curve-frame .area {
+        fill: var(--amber);
+        opacity: 0.28;
+      }
+      .curve-frame .line {
+        fill: none;
+        stroke: var(--amber);
+        stroke-width: 2.4;
+        stroke-linejoin: round;
+      }
+      .curve-frame .now-dot {
+        fill: var(--card);
+        stroke: var(--amber);
+        stroke-width: 3;
+      }
+      .curve-frame .now-halo {
+        fill: var(--amber);
+        opacity: 0.35;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: halo 2.4s ease-out infinite;
+      }
+      @keyframes halo {
+        from {
+          transform: scale(0.6);
+          opacity: 0.5;
+        }
+        to {
+          transform: scale(2.2);
+          opacity: 0;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .curve-frame .now-halo {
+          animation: none;
+        }
+      }
+
+      .site-card {
+        padding-top: 10px;
+        padding-bottom: 18px;
+      }
+      .site-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .site-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .site-row .k {
+        font-size: 34px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+      .site-row .k svg {
+        width: 36px;
+        height: 36px;
+        color: var(--primary);
+        flex-shrink: 0;
+      }
+      .site-row .v {
+        font-family: var(--font-display);
+        font-size: 40px;
+        font-weight: 800;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      .site-row .v .u {
+        font-size: 0.55em;
+        font-weight: 600;
+        color: var(--mid);
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+        font-size: 13px;
+        color: var(--dim);
+      }
+
+      @media (max-width: 1200px) {
+        .main {
+          padding: 16px;
+        }
+        .topbar {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .page-heading h1 {
+          font-size: 24px;
+        }
+        .capacity-readout {
+          font-size: 30px;
+        }
+        .capacity-readout span {
+          font-size: 16px;
+        }
+        .sites-grid {
+          grid-template-columns: 1fr;
+        }
+        .site-block-header h2 {
+          font-size: 36px;
+        }
+        .site-block-header .node {
+          font-size: 22px;
+        }
+        .perf-stat .lbl {
+          font-size: 17px;
+        }
+        .perf-stat .val {
+          font-size: 34px;
+        }
+        .perf-sub {
+          font-size: 17px;
+        }
+        .perf-sub .n {
+          font-size: 24px;
+        }
+        .perf-sub .u {
+          font-size: 16px;
+        }
+        .site-row {
+          padding: 11px 0;
+        }
+        .site-row .k {
+          font-size: 17px;
+          gap: 10px;
+        }
+        .site-row .k svg {
+          width: 22px;
+          height: 22px;
+        }
+        .site-row .v {
+          font-size: 22px;
+        }
+      }
+      @media (max-width: 640px) {
+        .perf-body {
+          grid-template-columns: 1fr;
+        }
+        .header-right {
+          margin-left: 0;
+          flex-wrap: wrap;
+          flex-shrink: 1;
+          gap: 10px 16px;
+        }
+        .site-block-header h2 {
+          font-size: 28px;
+        }
+        .site-block-header .node {
+          font-size: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="../assets/fit-screen.js"></script>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="page-heading">
+          <h1>
+            <img
+              src="../assets/gti-logo.png"
+              alt="GTI"
+            />
+            <span data-i18n="heading"></span>
+          </h1>
+        </div>
+        <div class="header-right">
+          <div class="sample-chip"><i></i><span data-i18n="sampleData"></span></div>
+          <div class="clock">
+            <div
+              class="t"
+              id="clockTime"
+            ></div>
+            <div
+              class="d"
+              id="clockDate"
+            ></div>
+          </div>
+          <div class="capacity-readout">
+            <b id="totalCapacity"></b>
+            <span data-i18n="unitKwp"></span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="sites-grid"
+        id="sites"
+      ></div>
+
+      <footer>
+        <span data-i18n="footer"></span>
+        <span data-i18n="footerNote"></span>
+      </footer>
+    </main>
+
+    <script src="../assets/mock-solar.js"></script>
+    <script>
+      // Single i18n source for this page: every visible string lives in MESSAGES, keyed per locale.
+      var MESSAGES = {
+        en: {
+          heading: "Solar Power System",
+          sampleData: "Live · sample data",
+          footer: "Globaltronic Intertrade Co., Ltd. · Solar Solutions",
+          footerNote: "Template with simulated readings — refreshes every 3 seconds",
+          unitKwp: "kWp",
+          unitKw: "kW",
+          unitKwh: "kWh",
+          unitIrradiance: "W/m²",
+          unitArea: "m²",
+          unitKg: "kg",
+          accumulated: "Accumulated Generation",
+          thisMonth: "This month:",
+          curveCaption: "Today's output",
+          instant: "Instant Output",
+          daily: "Daily Output",
+          yesterday: "Yesterday Output",
+          irradiation: "Irradiation",
+          forest: "Equivalent Forest Area",
+          carbon: "Carbon Reduction",
+        },
+      };
+      var LOCALE = "en";
+      var t = MESSAGES[LOCALE];
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        el.textContent = t[el.getAttribute("data-i18n")];
+      });
+
+      // ---- Sites (sample plants — add a line to add a site block) ----
+      var SITES = [
+        { id: "plant01", name: "PLANT-01", kwp: 640, seed: 1, commissioned: new Date(2023, 5, 1) },
+        { id: "plant02", name: "PLANT-02", kwp: 520, seed: 2, commissioned: new Date(2025, 1, 1) },
+      ];
+      var REFRESH_MS = 3000;
+      var LIFETIME_KWH_PER_KWP_DAY = 4.4; // long-run average yield of the mock sun model
+      var CARBON_KG_PER_KWH = 0.5;
+      var FOREST_M2_PER_KWH = 0.78;
+
+      var ICON = {
+        instant: '<path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/>',
+        daily: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+        yesterday:
+          '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+        irradiation:
+          '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+        forest: '<path d="M12 2 7 9h3l-4 6h4l-3 6h10l-3-6h4l-4-6h3z"/><path d="M12 21v-4"/>',
+        carbon: '<circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/>',
+      };
+      var ROWS = [
+        ["instant", "unitKw"],
+        ["daily", "unitKwh"],
+        ["yesterday", "unitKwh"],
+        ["irradiation", "unitIrradiance"],
+        ["forest", "unitArea"],
+        ["carbon", "unitKg"],
+      ];
+
+      function fmtNum(n, digits) {
+        return Number(n).toLocaleString("en-US", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits,
+        });
+      }
+      function setText(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text;
+      }
+
+      // Curve panel geometry (SVG viewBox 320×180).
+      var CURVE = { x0: 16, x1: 304, top: 44, base: 150 };
+      function curveX(min) {
+        var span = MockSolar.SUNSET_MIN - MockSolar.SUNRISE_MIN;
+        return CURVE.x0 + ((min - MockSolar.SUNRISE_MIN) / span) * (CURVE.x1 - CURVE.x0);
+      }
+      function curveY(site, kw) {
+        return CURVE.base - Math.min(kw / (site.kwp * 0.8), 1) * (CURVE.base - CURVE.top);
+      }
+      function curvePoints(site, day, uptoMin) {
+        var pts = [];
+        var end = Math.min(uptoMin, MockSolar.SUNSET_MIN);
+        for (var m = MockSolar.SUNRISE_MIN; m < end; m += MockSolar.STEP_MIN) {
+          pts.push([m, MockSolar.pvKw(site.kwp, day, m, site.seed)]);
+        }
+        if (end > MockSolar.SUNRISE_MIN)
+          pts.push([end, MockSolar.pvKw(site.kwp, day, end, site.seed)]);
+        return pts;
+      }
+      function pathOf(site, pts) {
+        return pts
+          .map(function (p, i) {
+            return (i ? "L" : "M") + curveX(p[0]).toFixed(1) + "," + curveY(site, p[1]).toFixed(1);
+          })
+          .join(" ");
+      }
+
+      function siteBlock(site) {
+        var rows = ROWS.map(function (row) {
+          return (
+            '<div class="site-row"><div class="k">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            ICON[row[0]] +
+            "</svg>" +
+            t[row[0]] +
+            '</div><div class="v"><span id="' +
+            site.id +
+            "-" +
+            row[0] +
+            '"></span> <span class="u">' +
+            t[row[1]] +
+            "</span></div></div>"
+          );
+        }).join("");
+        var axis = [
+          [MockSolar.SUNRISE_MIN, "06:00", "start"],
+          [720, "12:00", "middle"],
+          [MockSolar.SUNSET_MIN, "18:30", "end"],
+        ]
+          .map(function (a) {
+            return (
+              '<text class="axis" x="' +
+              curveX(a[0]).toFixed(1) +
+              '" y="168" text-anchor="' +
+              a[2] +
+              '">' +
+              a[1] +
+              "</text>"
+            );
+          })
+          .join("");
+        return (
+          '<div class="site-block">' +
+          '<div class="site-block-header"><span class="site-dot"></span><h2>' +
+          site.name +
+          '</h2><span class="node">' +
+          fmtNum(site.kwp, 2) +
+          ' <span class="u">' +
+          t.unitKwp +
+          "</span></span></div>" +
+          '<div class="site-cards">' +
+          '<div class="card"><div class="perf-body"><div class="perf-stat">' +
+          '<div class="lbl"><i></i>' +
+          t.accumulated +
+          "</div>" +
+          '<div class="val"><span class="num" id="' +
+          site.id +
+          '-accumulated"></span><span class="u">' +
+          t.unitKwh +
+          "</span></div>" +
+          '<div class="perf-sub">' +
+          t.thisMonth +
+          ' <span class="n" id="' +
+          site.id +
+          '-month"></span> <span class="u">' +
+          t.unitKwh +
+          "</span></div>" +
+          "</div>" +
+          '<div class="curve-frame"><svg viewBox="0 0 320 180" preserveAspectRatio="none" role="img" aria-label="' +
+          t.curveCaption +
+          '">' +
+          '<text class="cap" x="16" y="26">' +
+          t.curveCaption +
+          "</text>" +
+          '<text class="cap" x="304" y="26" text-anchor="end" id="' +
+          site.id +
+          '-curve-now"></text>' +
+          '<line class="base" x1="16" y1="150" x2="304" y2="150"/>' +
+          '<path class="forecast" id="' +
+          site.id +
+          '-curve-forecast"/>' +
+          '<path class="area" id="' +
+          site.id +
+          '-curve-area"/>' +
+          '<path class="line" id="' +
+          site.id +
+          '-curve-line"/>' +
+          '<circle class="now-halo" r="7" id="' +
+          site.id +
+          '-curve-halo"/>' +
+          '<circle class="now-dot" r="4.5" id="' +
+          site.id +
+          '-curve-dot"/>' +
+          axis +
+          "</svg></div>" +
+          "</div></div>" +
+          '<div class="card site-card">' +
+          rows +
+          "</div>" +
+          "</div></div>"
+        );
+      }
+
+      document.getElementById("sites").innerHTML = SITES.map(siteBlock).join("");
+      setText(
+        "totalCapacity",
+        fmtNum(
+          SITES.reduce(function (sum, s) {
+            return sum + s.kwp;
+          }, 0),
+          2,
+        ),
+      );
+
+      // Finished days never change — compute each once.
+      var fullDayCache = {};
+      function fullDayKwh(site, day) {
+        var key = site.id + ":" + day;
+        if (!(key in fullDayCache)) {
+          fullDayCache[key] = MockSolar.energy(function (m) {
+            return MockSolar.pvKw(site.kwp, day, m, site.seed);
+          }, 1440);
+        }
+        return fullDayCache[key];
+      }
+
+      function refreshSite(site, now) {
+        var day = MockSolar.dayIndex(now);
+        var min = MockSolar.minuteOfDay(now);
+        var smooth = MockSolar.pvKw(site.kwp, day, min, site.seed);
+        var instant = smooth * MockSolar.jitter(0.012);
+        var daily = MockSolar.energy(function (m) {
+          return MockSolar.pvKw(site.kwp, day, m, site.seed);
+        }, min);
+        var month = daily;
+        for (var d = day - (now.getDate() - 1); d < day; d++) month += fullDayKwh(site, d);
+        var daysRunning = day - MockSolar.dayIndex(site.commissioned);
+        var accumulated = site.kwp * LIFETIME_KWH_PER_KWP_DAY * daysRunning + daily;
+
+        setText(site.id + "-instant", fmtNum(instant, 0));
+        setText(site.id + "-daily", fmtNum(daily, 0));
+        setText(site.id + "-yesterday", fmtNum(fullDayKwh(site, day - 1), 0));
+        setText(
+          site.id + "-irradiation",
+          fmtNum(MockSolar.irradiance(day, min, site.seed) * MockSolar.jitter(0.008), 0),
+        );
+        setText(site.id + "-accumulated", fmtNum(accumulated, 0));
+        setText(site.id + "-month", fmtNum(month, 0));
+        setText(site.id + "-forest", fmtNum(accumulated * FOREST_M2_PER_KWH, 0));
+        setText(site.id + "-carbon", fmtNum(accumulated * CARBON_KG_PER_KWH, 0));
+
+        // Curve: dashed = the whole day, solid = produced so far, dot = now.
+        var done = curvePoints(site, day, min);
+        var line = pathOf(site, done);
+        document
+          .getElementById(site.id + "-curve-forecast")
+          .setAttribute("d", pathOf(site, curvePoints(site, day, 1440)));
+        document.getElementById(site.id + "-curve-line").setAttribute("d", line);
+        document
+          .getElementById(site.id + "-curve-area")
+          .setAttribute(
+            "d",
+            done.length > 1
+              ? line +
+                  " L" +
+                  curveX(done[done.length - 1][0]).toFixed(1) +
+                  "," +
+                  CURVE.base +
+                  " L" +
+                  CURVE.x0 +
+                  "," +
+                  CURVE.base +
+                  " Z"
+              : "",
+          );
+        var nowMin = Math.max(MockSolar.SUNRISE_MIN, Math.min(min, MockSolar.SUNSET_MIN));
+        ["dot", "halo"].forEach(function (part) {
+          var el = document.getElementById(site.id + "-curve-" + part);
+          el.setAttribute("cx", curveX(nowMin).toFixed(1));
+          el.setAttribute("cy", curveY(site, smooth).toFixed(1));
+        });
+        setText(site.id + "-curve-now", fmtNum(instant, 0) + " " + t.unitKw);
+      }
+
+      function refreshAll() {
+        var now = MockSolar.now();
+        SITES.forEach(function (site) {
+          refreshSite(site, now);
+        });
+      }
+      function tickClock() {
+        var now = MockSolar.now();
+        setText("clockTime", now.toLocaleTimeString("en-GB"));
+        setText(
+          "clockDate",
+          now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+        );
+      }
+      refreshAll();
+      tickClock();
+      setInterval(refreshAll, REFRESH_MS);
+      setInterval(tickClock, 1000);
+    </script>
+  </body>
+</html>

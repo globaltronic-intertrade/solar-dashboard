@@ -20,13 +20,15 @@
 
 ## หน้าทั้งหมด
 
-| หมวด                  | หน้า                                                   | ใช้ทำอะไร                                                                               |
-| --------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| —                     | [`/`](index.html)                                      | หน้า landing รวมลิงก์ทุก demo แบ่งตามหมวด                                               |
-| ประเมินความคุ้มค่า    | [`calculator/`](calculator/index.html)                 | **SolarSave** — คำนวณค่าไฟที่ประหยัดได้ ระยะคืนทุน และกำไรสุทธิ 25 ปี                   |
-| ติดตามระบบหลังติดตั้ง | [`factory-monitoring/`](factory-monitoring/index.html) | Factory Monitoring — การผลิตไฟของโรงงาน พร้อมผลด้านสิ่งแวดล้อม (ข้อมูลขยับทุก 5 วินาที) |
-| ติดตามระบบหลังติดตั้ง | [`plant-overview/`](plant-overview/index.html)         | Plant Overview — ภาพรวมโรงไฟฟ้า การจัดการพลังงาน และรายได้                              |
-| ติดตามระบบหลังติดตั้ง | [`solar-overview/`](solar-overview/index.html)         | Solar Overview — การผลิตพลังงาน แบตเตอรี่ และ power flow                                |
+| หมวด                  | หน้า                                                         | ใช้ทำอะไร                                                                                                         |
+| --------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| —                     | [`/`](index.html)                                            | หน้า landing รวมลิงก์ทุก demo แบ่งตามหมวด                                                                         |
+| ประเมินความคุ้มค่า    | [`calculator/`](calculator/index.html)                       | **SolarSave** — คำนวณค่าไฟที่ประหยัดได้ ระยะคืนทุน และกำไรสุทธิ 25 ปี                                             |
+| ติดตามระบบหลังติดตั้ง | [`factory-monitoring/`](factory-monitoring/index.html)       | Factory Monitoring — การผลิตไฟของโรงงาน พร้อมผลด้านสิ่งแวดล้อม (ข้อมูลขยับทุก 5 วินาที)                           |
+| ติดตามระบบหลังติดตั้ง | [`plant-overview/`](plant-overview/index.html)               | Plant Overview — ภาพรวมโรงไฟฟ้า การจัดการพลังงาน และรายได้                                                        |
+| ติดตามระบบหลังติดตั้ง | [`solar-overview/`](solar-overview/index.html)               | Solar Overview — การผลิตพลังงาน แบตเตอรี่ และ power flow                                                          |
+| ติดตามระบบหลังติดตั้ง | [`multi-site-monitoring/`](multi-site-monitoring/index.html) | Multi-Site Monitoring — โรงไฟฟ้าหลายไซต์บนจอเดียว: กำลังผลิตขณะนี้ ยอดวันนี้/เมื่อวาน/เดือนนี้/สะสม และกราฟของวัน |
+| ติดตามระบบหลังติดตั้ง | [`power-flow-monitoring/`](power-flow-monitoring/index.html) | Power Flow Monitoring — แผนภาพการไหลของไฟ (โซลาร์ 2 ชุด → โรงงาน ← กริด) และการใช้พลังงานรายวัน/รายเดือน          |
 
 ### SolarSave (calculator)
 
@@ -36,6 +38,17 @@
 
 สมมติฐานที่ใช้ (แสดงไว้ในหน้าด้วย): ประสิทธิภาพระบบ 80% · แผงเสื่อม 0.5%/ปี · ค่าไฟขึ้นเฉลี่ย 3%/ปี ·
 On-grid ไม่มีแบตเตอรี่ · อายุแผง 25 ปี · ไม่รวมค่าบำรุงรักษา (~2,000 บาท/ปี)
+
+### ข้อมูลจำลองแบบ real-time (Multi-Site / Power Flow)
+
+สองหน้านี้ไม่มี backend — ตัวเลขทั้งหมดคำนวณในเบราว์เซอร์โดย `assets/mock-solar.js` จาก**นาฬิกาของเครื่อง**:
+เส้นโค้งแสงแดดตามเวลา (06:00–18:30) เมฆที่ผ่านไปมา และสภาพอากาศของแต่ละวัน ค่าขณะนี้ขยับทุก 3 วินาที
+ส่วนยอดวันนี้ เดือนนี้ และยอดสะสม ไล่เพิ่มตามค่าขณะนี้จริง เปิดซ้ำกี่ครั้งก็ได้ตัวเลขชุดเดิมของเวลานั้น
+
+- กลางคืนโซลาร์ผลิตเป็น 0 ตามจริง — ถ้าจะโชช่วงเย็น/ค่ำ ให้ต่อท้าย URL ด้วย `?time=12:30`
+  (ตั้งเวลาเริ่มของ demo แล้วนาฬิกาเดินต่อจากตรงนั้น) เช่น `power-flow-monitoring/?time=12:30`
+- ปรับขนาดระบบ/จำนวนไซต์: แก้ `SITES` (Multi-Site) หรือ `PV_TOP` / `PV_BOTTOM` / `loadKw` (Power Flow) ในหน้านั้น
+- นำไปใช้กับงานจริง: แทน `readDashboard()` / `refreshSite()` ด้วยการ `fetch` จาก logger ของไซต์ — ทำใน private repo ของลูกค้า
 
 ## การทำงาน
 
@@ -53,7 +66,7 @@ flowchart LR
 
 ### แสดงเต็มจอไม่ต้อง scroll
 
-แดชบอร์ดทั้ง 3 หน้าโหลด `assets/fit-screen.js` ซึ่งย่อ/ขยายทั้งหน้าให้พอดีจอแนวนอน (กว้างตั้งแต่ 1201 px)
+แดชบอร์ดทั้ง 5 หน้าโหลด `assets/fit-screen.js` ซึ่งย่อ/ขยายทั้งหน้าให้พอดีจอแนวนอน (กว้างตั้งแต่ 1201 px)
 หน้าตาจึงเหมือนกันทั้งบนโน้ตบุ๊ก 1366×768, MacBook และทีวี 1920×1080 ส่วนจอแคบหรือแนวตั้ง (มือถือ แท็บเล็ต)
 ใช้ layout ปกติของหน้าและ scroll ได้ตามเดิม
 
@@ -90,11 +103,14 @@ bun run verify   # ตรวจ format + ลิงก์/รูป/ไฟล์�
 index.html                 หน้า landing + dictionary ข้อความ MESSAGES
 assets/gti-logo.png        โลโก้ GTI (ใช้เป็น favicon ทุกหน้า)
 assets/fit-screen.js       ย่อ/ขยายแดชบอร์ดให้เต็มจอไม่ต้อง scroll
+assets/mock-solar.js       ตัวจำลองข้อมูลโซลาร์ตามเวลาจริง (ใช้โดย Multi-Site และ Power Flow)
 docs/                      ภาพหน้าจอใน README
 calculator/                SolarSave — เครื่องคำนวณความคุ้มค่า
 factory-monitoring/        template Factory Monitoring
 plant-overview/            template Plant Overview
 solar-overview/            template Solar Overview
+multi-site-monitoring/     template Multi-Site Monitoring
+power-flow-monitoring/     template Power Flow Monitoring
 scripts/check-links.mjs    ตรวจว่า src/href/url() ภายในทุกไฟล์มีอยู่จริง
 .github/workflows/         CI: bun run verify
 package.json               scripts format / verify / serve
@@ -103,8 +119,9 @@ package.json               scripts format / verify / serve
 
 ## สิ่งที่ยังขาด
 
-- หน้าที่ย้ายมาจาก repo เดิม (template 3 หน้า + calculator) ยังเขียนข้อความและสีไว้ในหน้าตรงๆ
-  ยังไม่ได้ผ่าน dictionary กลางและ design token
+- หน้าที่ย้ายมาจาก repo เดิม (Factory Monitoring, Plant Overview, Solar Overview และ calculator)
+  ยังเขียนข้อความและสีไว้ในหน้าตรงๆ ยังไม่ได้ผ่าน dictionary กลางและ design token
+  (Multi-Site และ Power Flow ใช้ dictionary `MESSAGES` และ CSS token แล้ว)
 
 ## สำหรับ AI assistant
 
